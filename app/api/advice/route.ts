@@ -1,9 +1,3 @@
-declare const process: {
-  env: {
-    OPENAI_API_KEY?: string;
-  };
-};
-
 const OPENAI_RESPONSES_URL = 'https://api.openai.com/v1/responses';
 
 const SYSTEM_PROMPT =
