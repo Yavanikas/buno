@@ -57,6 +57,15 @@ export async function POST(request: Request) {
     });
 
     if (!response.ok) {
+      const errorBody = await response.text();
+
+      if (process.env.NODE_ENV === 'development') {
+        console.error('OpenAI API error', {
+          status: response.status,
+          body: errorBody,
+        });
+      }
+
       return Response.json({ advice: FALLBACK_ADVICE }, { status: 502 });
     }
 
