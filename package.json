@@ -20,9 +20,6 @@
     "@types/react-dom": "latest",
     "postcss": "latest",
     "tailwindcss": "latest",
-    "@types/node": "latest",
-    "@types/react": "latest",
-    "@types/react-dom": "latest",
     "typescript": "latest"
   }
 }

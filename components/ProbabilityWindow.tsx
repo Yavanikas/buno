@@ -43,9 +43,13 @@ export default function ProbabilityWindow({
   riskLabel,
   recentAverage,
 }: ProbabilityWindowProps) {
-  const [advice, setAdvice] = useState<string>('');
+  const [advice, setAdvice] = useState<string>(FALLBACK_ADVICE);
   const [isLoading, setIsLoading] = useState(true);
-  const riskBadge = riskBadgeStyles[riskLabel];
+  const safeRiskLabel = isRiskLabel(riskLabel) ? riskLabel : 'watchful';
+  const safeSafetyRangeLow = toDisplayNumber(safetyRangeLow);
+  const safeSafetyRangeHigh = toDisplayNumber(safetyRangeHigh);
+  const safeRecentAverage = toDisplayNumber(recentAverage);
+  const riskBadge = riskBadgeStyles[safeRiskLabel];
 
   useEffect(() => {
     let isMounted = true;
@@ -60,10 +64,10 @@ export default function ProbabilityWindow({
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            riskLabel,
-            safetyRangeLow,
-            safetyRangeHigh,
-            recentAverage,
+            riskLabel: safeRiskLabel,
+            safetyRangeLow: safeSafetyRangeLow,
+            safetyRangeHigh: safeSafetyRangeHigh,
+            recentAverage: safeRecentAverage,
           }),
         });
 
@@ -93,7 +97,7 @@ export default function ProbabilityWindow({
     return () => {
       isMounted = false;
     };
-  }, [recentAverage, riskLabel, safetyRangeHigh, safetyRangeLow]);
+  }, [safeRecentAverage, safeRiskLabel, safeSafetyRangeHigh, safeSafetyRangeLow]);
 
   if (isLoading) {
     return <ProbabilityWindowSkeleton />;
@@ -106,7 +110,9 @@ export default function ProbabilityWindow({
           <div className="flex flex-col gap-1">
             <h2 className="text-lg font-semibold text-slate-950">Today&apos;s Spending Window</h2>
             <p className="text-3xl font-bold tracking-tight text-slate-950">
-              ₹{safetyRangeLow}–₹{safetyRangeHigh}
+              ₹{formatCurrencyAmount(safeSafetyRangeLow)}–₹{formatCurrencyAmount(
+                safeSafetyRangeHigh,
+              )}
             </p>
             <p className="text-sm text-slate-500">Comfortable spending zone</p>
           </div>
@@ -123,6 +129,18 @@ export default function ProbabilityWindow({
       </div>
     </section>
   );
+}
+
+function isRiskLabel(value: unknown): value is RiskLabel {
+  return value === 'safe' || value === 'watchful' || value === 'fragile';
+}
+
+function toDisplayNumber(value: unknown): number {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : 0;
+}
+
+function formatCurrencyAmount(value: number): string {
+  return Number.isFinite(value) ? String(Math.round(value)) : '0';
 }
 
 function ProbabilityWindowSkeleton() {
