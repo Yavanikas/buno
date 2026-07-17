@@ -4,6 +4,7 @@ const SYSTEM_PROMPT =
   'You are a calm budgeting assistant. You must NEVER state an exact remaining balance or exact rupee amount. Only describe spending pace using relative, qualitative language such as comfort zones, pacing, or flexibility. Adapt tone to riskLabel: safe = reassuring, watchful = gently cautious, fragile = clear but non-alarming. Keep the response to one short sentence.';
 
 const FALLBACK_ADVICE = 'Keep an eye on your pace today.';
+const OPENAI_TIMEOUT_MS = 10_000;
 
 type AdviceRequestBody = {
   riskLabel?: 'safe' | 'watchful' | 'fragile';
@@ -20,12 +21,21 @@ export async function POST(request: Request) {
   let body: AdviceRequestBody;
 
   try {
-    body = await request.json();
+    const parsedBody = (await request.json()) as unknown;
+    body = parsedBody && typeof parsedBody === 'object' ? (parsedBody as AdviceRequestBody) : {};
   } catch {
     return Response.json({ advice: FALLBACK_ADVICE }, { status: 400 });
   }
 
-  const { riskLabel, safetyRangeLow, safetyRangeHigh, recentAverage } = body;
+  const safeContext = {
+    riskLabel: isRiskLabel(body.riskLabel) ? body.riskLabel : 'watchful',
+    safetyRangeLow: toSafeNumber(body.safetyRangeLow),
+    safetyRangeHigh: toSafeNumber(body.safetyRangeHigh),
+    recentAverage: toSafeNumber(body.recentAverage),
+  };
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), OPENAI_TIMEOUT_MS);
 
   try {
     const response = await fetch(OPENAI_RESPONSES_URL, {
@@ -34,6 +44,7 @@ export async function POST(request: Request) {
         Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
       },
+      signal: controller.signal,
       body: JSON.stringify({
         model: 'gpt-5.6',
         instructions: SYSTEM_PROMPT,
@@ -44,10 +55,10 @@ export async function POST(request: Request) {
               {
                 type: 'input_text',
                 text: JSON.stringify({
-                  riskLabel,
-                  safetyRangeLow,
-                  safetyRangeHigh,
-                  recentAverage,
+                  riskLabel: safeContext.riskLabel,
+                  safetyRangeLow: safeContext.safetyRangeLow,
+                  safetyRangeHigh: safeContext.safetyRangeHigh,
+                  recentAverage: safeContext.recentAverage,
                 }),
               },
             ],
@@ -76,5 +87,15 @@ export async function POST(request: Request) {
     });
   } catch {
     return Response.json({ advice: FALLBACK_ADVICE }, { status: 502 });
+  } finally {
+    clearTimeout(timeout);
   }
+}
+
+function isRiskLabel(value: unknown): value is NonNullable<AdviceRequestBody['riskLabel']> {
+  return value === 'safe' || value === 'watchful' || value === 'fragile';
+}
+
+function toSafeNumber(value: unknown): number {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : 0;
 }
