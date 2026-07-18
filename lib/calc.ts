@@ -10,6 +10,41 @@ export type SafetyRange = {
 
 export type RiskLabel = 'safe' | 'watchful' | 'fragile';
 
+export type BudgetStateInput = {
+  totalBudget?: number;
+  expenses?: Expense[];
+  remainingDays?: number;
+};
+
+export type BudgetState = {
+  riskLabel: RiskLabel;
+  zoneLabel: 'Comfortable zone' | 'Watchful zone' | 'Fragile zone';
+  paceLabel: 'Flexible today' | 'Pace is tightening' | 'Very limited flexibility';
+};
+
+
+// Combines the budget numbers into safe, simple labels for the UI.
+export function getBudgetState(input: BudgetStateInput = {}): BudgetState {
+  const expenses = Array.isArray(input.expenses) ? input.expenses : [];
+  const totalBudget = Math.max(0, toSafeNumber(input.totalBudget));
+  const spentSoFar = getSpentSoFar(expenses);
+  const rawRemainingBudget = totalBudget - spentSoFar;
+  const remainingBudget = getRemainingBudget(totalBudget, spentSoFar);
+  const remainingDays = Math.max(0, Math.floor(toSafeNumber(input.remainingDays)));
+
+  if (rawRemainingBudget <= 0 || remainingDays <= 0) {
+    return getQualitativeBudgetState('fragile');
+  }
+
+  const baseAllowance = getBaseDailyAllowance(remainingBudget, remainingDays);
+  const safetyRange = getSafetyRange(baseAllowance);
+  const recentAverageDays = Math.max(1, Math.min(7, remainingDays));
+  const recentAverage = getRecentAverage(expenses, recentAverageDays);
+  const riskLabel = getRiskLabel(recentAverage, safetyRange);
+
+  return getQualitativeBudgetState(riskLabel);
+}
+
 // Adds up every valid expense amount to show how much has been spent so far.
 export function getSpentSoFar(expenses: Expense[]): number {
   if (!Array.isArray(expenses)) {
@@ -113,6 +148,31 @@ export function getRiskLabel(recentAverage: number, safetyRange: SafetyRange): R
   }
 
   return 'fragile';
+}
+
+
+function getQualitativeBudgetState(riskLabel: RiskLabel): BudgetState {
+  if (riskLabel === 'safe') {
+    return {
+      riskLabel,
+      zoneLabel: 'Comfortable zone',
+      paceLabel: 'Flexible today',
+    };
+  }
+
+  if (riskLabel === 'watchful') {
+    return {
+      riskLabel,
+      zoneLabel: 'Watchful zone',
+      paceLabel: 'Pace is tightening',
+    };
+  }
+
+  return {
+    riskLabel,
+    zoneLabel: 'Fragile zone',
+    paceLabel: 'Very limited flexibility',
+  };
 }
 
 function toSafeNumber(value: unknown): number {
