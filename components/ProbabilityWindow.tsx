@@ -3,12 +3,16 @@
 import { useEffect, useState } from 'react';
 
 type RiskLabel = 'safe' | 'watchful' | 'fragile';
+type ZoneLabel = 'Comfortable zone' | 'Watchful zone' | 'Fragile zone';
+type PaceLabel = 'Flexible today' | 'Pace is tightening' | 'Very limited flexibility';
 
 type ProbabilityWindowProps = {
-  safetyRangeLow: number;
-  safetyRangeHigh: number;
   riskLabel: RiskLabel;
-  recentAverage: number;
+  zoneLabel?: ZoneLabel;
+  paceLabel?: PaceLabel;
+  safetyRangeLow?: number;
+  safetyRangeHigh?: number;
+  recentAverage?: number;
 };
 
 type AdviceResponse = {
@@ -37,18 +41,28 @@ const riskBadgeStyles: Record<RiskLabel, RiskBadgeStyle> = {
   },
 };
 
+const zoneLabels: Record<RiskLabel, ZoneLabel> = {
+  safe: 'Comfortable zone',
+  watchful: 'Watchful zone',
+  fragile: 'Fragile zone',
+};
+
+const paceLabels: Record<RiskLabel, PaceLabel> = {
+  safe: 'Flexible today',
+  watchful: 'Pace is tightening',
+  fragile: 'Very limited flexibility',
+};
+
 export default function ProbabilityWindow({
-  safetyRangeLow,
-  safetyRangeHigh,
   riskLabel,
-  recentAverage,
+  zoneLabel,
+  paceLabel,
 }: ProbabilityWindowProps) {
   const [advice, setAdvice] = useState<string>(FALLBACK_ADVICE);
   const [isLoading, setIsLoading] = useState(true);
   const safeRiskLabel = isRiskLabel(riskLabel) ? riskLabel : 'watchful';
-  const safeSafetyRangeLow = toDisplayNumber(safetyRangeLow);
-  const safeSafetyRangeHigh = toDisplayNumber(safetyRangeHigh);
-  const safeRecentAverage = toDisplayNumber(recentAverage);
+  const safeZoneLabel = toSafeLabel(zoneLabel, zoneLabels[safeRiskLabel]);
+  const safePaceLabel = toSafeLabel(paceLabel, paceLabels[safeRiskLabel]);
   const riskBadge = riskBadgeStyles[safeRiskLabel];
 
   useEffect(() => {
@@ -65,9 +79,8 @@ export default function ProbabilityWindow({
           },
           body: JSON.stringify({
             riskLabel: safeRiskLabel,
-            safetyRangeLow: safeSafetyRangeLow,
-            safetyRangeHigh: safeSafetyRangeHigh,
-            recentAverage: safeRecentAverage,
+            zoneLabel: safeZoneLabel,
+            paceLabel: safePaceLabel,
           }),
         });
 
@@ -97,7 +110,7 @@ export default function ProbabilityWindow({
     return () => {
       isMounted = false;
     };
-  }, [safeRecentAverage, safeRiskLabel, safeSafetyRangeHigh, safeSafetyRangeLow]);
+  }, [safePaceLabel, safeRiskLabel, safeZoneLabel]);
 
   if (isLoading) {
     return <ProbabilityWindowSkeleton />;
@@ -107,14 +120,10 @@ export default function ProbabilityWindow({
     <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md">
       <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex max-w-prose flex-col gap-4">
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-2">
             <h2 className="text-lg font-semibold text-slate-950">Today&apos;s Spending Window</h2>
-            <p className="text-3xl font-bold tracking-tight text-slate-950">
-              ₹{formatCurrencyAmount(safeSafetyRangeLow)}–₹{formatCurrencyAmount(
-                safeSafetyRangeHigh,
-              )}
-            </p>
-            <p className="text-sm text-slate-500">Comfortable spending zone</p>
+            <p className="text-2xl font-bold tracking-tight text-slate-950">{safeZoneLabel}</p>
+            <p className="text-sm font-medium text-slate-600">{safePaceLabel}</p>
           </div>
 
           <p className="max-w-prose text-sm leading-6 text-slate-600">{advice}</p>
@@ -135,12 +144,8 @@ function isRiskLabel(value: unknown): value is RiskLabel {
   return value === 'safe' || value === 'watchful' || value === 'fragile';
 }
 
-function toDisplayNumber(value: unknown): number {
-  return typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : 0;
-}
-
-function formatCurrencyAmount(value: number): string {
-  return Number.isFinite(value) ? String(Math.round(value)) : '0';
+function toSafeLabel(value: unknown, fallback: string): string {
+  return typeof value === 'string' && value.trim().length > 0 ? value.trim() : fallback;
 }
 
 function ProbabilityWindowSkeleton() {
@@ -153,8 +158,8 @@ function ProbabilityWindowSkeleton() {
         <div className="flex flex-1 flex-col gap-4">
           <div className="flex flex-col gap-2">
             <div className="h-5 w-48 rounded bg-slate-200" />
-            <div className="h-9 w-40 rounded bg-slate-200" />
-            <div className="h-4 w-52 rounded bg-slate-200" />
+            <div className="h-8 w-44 rounded bg-slate-200" />
+            <div className="h-4 w-40 rounded bg-slate-200" />
           </div>
 
           <div className="h-4 max-w-prose rounded bg-slate-200" />
