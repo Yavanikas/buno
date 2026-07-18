@@ -1,6 +1,6 @@
-export type MockExpense = {
-  amount: number;
-  date: string;
+import type { Expense } from '../lib/calc';
+
+export type MockExpense = Expense & {
   category:
     | 'food'
     | 'transport'

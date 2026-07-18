@@ -1,3 +1,5 @@
+import type { BudgetState } from '../../../lib/calc';
+
 const OPENAI_RESPONSES_URL = 'https://api.openai.com/v1/responses';
 
 const SYSTEM_PROMPT =
@@ -6,18 +8,18 @@ const SYSTEM_PROMPT =
 const FALLBACK_ADVICE = 'Keep an eye on your pace today.';
 const OPENAI_TIMEOUT_MS = 10_000;
 
-type RiskLabel = 'safe' | 'watchful' | 'fragile';
+type RiskLabel = BudgetState['riskLabel'];
 
 type AdviceRequestBody = {
   riskLabel?: RiskLabel;
-  zoneLabel?: string;
-  paceLabel?: string;
+  zoneLabel?: BudgetState['zoneLabel'];
+  paceLabel?: BudgetState['paceLabel'];
 };
 
 type SafeAdviceContext = {
   riskLabel: RiskLabel;
-  zoneLabel: string;
-  paceLabel: string;
+  zoneLabel: BudgetState['zoneLabel'];
+  paceLabel: BudgetState['paceLabel'];
 };
 
 type OpenAIResponse = {
@@ -86,6 +88,11 @@ export async function POST(request: Request) {
       return fallbackResponse();
     }
 
+    if (containsExactAmount(advice)) {
+      logDevelopmentError('OpenAI API returned advice with exact numeric content');
+      return fallbackResponse();
+    }
+
     return Response.json({ advice });
   } catch (error) {
     logDevelopmentError('OpenAI advice request failed', error);
@@ -113,8 +120,8 @@ async function parseRequestBody(request: Request): Promise<AdviceRequestBody | n
 function toSafeAdviceContext(body: AdviceRequestBody): SafeAdviceContext {
   return {
     riskLabel: isRiskLabel(body.riskLabel) ? body.riskLabel : 'watchful',
-    zoneLabel: toSafeLabel(body.zoneLabel, 'Watchful zone'),
-    paceLabel: toSafeLabel(body.paceLabel, 'Pace is tightening'),
+    zoneLabel: isZoneLabel(body.zoneLabel) ? body.zoneLabel : 'Watchful zone',
+    paceLabel: isPaceLabel(body.paceLabel) ? body.paceLabel : 'Pace is tightening',
   };
 }
 
@@ -126,8 +133,20 @@ function isRiskLabel(value: unknown): value is RiskLabel {
   return value === 'safe' || value === 'watchful' || value === 'fragile';
 }
 
-function toSafeLabel(value: unknown, fallback: string): string {
-  return typeof value === 'string' && value.trim().length > 0 ? value.trim() : fallback;
+function isZoneLabel(value: unknown): value is BudgetState['zoneLabel'] {
+  return value === 'Comfortable zone' || value === 'Watchful zone' || value === 'Fragile zone';
+}
+
+function isPaceLabel(value: unknown): value is BudgetState['paceLabel'] {
+  return (
+    value === 'Flexible today' ||
+    value === 'Pace is tightening' ||
+    value === 'Very limited flexibility'
+  );
+}
+
+function containsExactAmount(value: string): boolean {
+  return /₹|\brs\.?\b|\brupees?\b|\d/.test(value.toLowerCase());
 }
 
 function fallbackResponse(): Response {

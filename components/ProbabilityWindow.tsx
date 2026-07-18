@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import type { BudgetState } from '../lib/calc';
 
-type RiskLabel = 'safe' | 'watchful' | 'fragile';
-type ZoneLabel = 'Comfortable zone' | 'Watchful zone' | 'Fragile zone';
-type PaceLabel = 'Flexible today' | 'Pace is tightening' | 'Very limited flexibility';
+type RiskLabel = BudgetState['riskLabel'];
+type ZoneLabel = BudgetState['zoneLabel'];
+type PaceLabel = BudgetState['paceLabel'];
 
 type ProbabilityWindowProps = {
   riskLabel: RiskLabel;
