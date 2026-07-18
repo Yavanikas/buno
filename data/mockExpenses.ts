@@ -1,7 +1,14 @@
 export type MockExpense = {
   amount: number;
   date: string;
-  category: 'food' | 'transport' | 'groceries' | 'subscriptions' | 'academics' | 'social' | 'personal care';
+  category:
+    | 'food'
+    | 'transport'
+    | 'groceries'
+    | 'subscriptions'
+    | 'academics'
+    | 'social'
+    | 'personal care';
   note: string;
 };
 
@@ -61,6 +68,12 @@ export const mockExpenses: MockExpense[] = [
     note: 'Toiletries refill',
   },
   {
+    amount: 199,
+    date: '2026-07-18',
+    category: 'subscriptions',
+    note: 'Mobile data pack',
+  },
+  {
     amount: 110,
     date: '2026-07-19',
     category: 'food',
@@ -71,6 +84,12 @@ export const mockExpenses: MockExpense[] = [
     date: '2026-07-23',
     category: 'academics',
     note: 'Printouts',
+  },
+  {
+    amount: 220,
+    date: '2026-07-25',
+    category: 'personal care',
+    note: 'Laundry pickup',
   },
   {
     amount: 850,
