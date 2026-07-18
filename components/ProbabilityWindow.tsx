@@ -11,9 +11,7 @@ type ProbabilityWindowProps = {
   riskLabel: RiskLabel;
   zoneLabel?: ZoneLabel;
   paceLabel?: PaceLabel;
-  safetyRangeLow?: number;
-  safetyRangeHigh?: number;
-  recentAverage?: number;
+  [unusedProp: string]: unknown;
 };
 
 type AdviceResponse = {
@@ -90,7 +88,7 @@ export default function ProbabilityWindow({
         }
 
         const data = (await response.json()) as AdviceResponse;
-        const nextAdvice = data.advice?.trim() || FALLBACK_ADVICE;
+        const nextAdvice = toSafeAdvice(data.advice);
 
         if (isMounted) {
           setAdvice(nextAdvice);
@@ -146,7 +144,31 @@ function isRiskLabel(value: unknown): value is RiskLabel {
 }
 
 function toSafeLabel(value: unknown, fallback: string): string {
-  return typeof value === 'string' && value.trim().length > 0 ? value.trim() : fallback;
+  if (typeof value !== 'string') {
+    return fallback;
+  }
+
+  const label = value.trim();
+
+  if (!label || isBrokenText(label) || containsExactAmount(label)) {
+    return fallback;
+  }
+
+  return label;
+}
+
+function toSafeAdvice(value: unknown): string {
+  return toSafeLabel(value, FALLBACK_ADVICE);
+}
+
+function isBrokenText(value: string): boolean {
+  const normalizedValue = value.toLowerCase();
+
+  return normalizedValue === 'undefined' || normalizedValue === 'null' || normalizedValue === 'nan';
+}
+
+function containsExactAmount(value: string): boolean {
+  return /₹|\brs\.?\b|\brupees?\b|\d/.test(value.toLowerCase());
 }
 
 function ProbabilityWindowSkeleton() {
