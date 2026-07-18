@@ -6,11 +6,18 @@ const SYSTEM_PROMPT =
 const FALLBACK_ADVICE = 'Keep an eye on your pace today.';
 const OPENAI_TIMEOUT_MS = 10_000;
 
+type RiskLabel = 'safe' | 'watchful' | 'fragile';
+
 type AdviceRequestBody = {
-  riskLabel?: 'safe' | 'watchful' | 'fragile';
-  safetyRangeLow?: number;
-  safetyRangeHigh?: number;
-  recentAverage?: number;
+  riskLabel?: RiskLabel;
+  zoneLabel?: string;
+  paceLabel?: string;
+};
+
+type SafeAdviceContext = {
+  riskLabel: RiskLabel;
+  zoneLabel: string;
+  paceLabel: string;
 };
 
 type OpenAIResponse = {
@@ -18,22 +25,21 @@ type OpenAIResponse = {
 };
 
 export async function POST(request: Request) {
-  let body: AdviceRequestBody;
+  const parsedBody = await parseRequestBody(request);
 
-  try {
-    const parsedBody = (await request.json()) as unknown;
-    body = parsedBody && typeof parsedBody === 'object' ? (parsedBody as AdviceRequestBody) : {};
-  } catch {
-    return Response.json({ advice: FALLBACK_ADVICE }, { status: 400 });
+  if (!parsedBody) {
+    logDevelopmentError('Invalid advice request body');
+    return fallbackResponse();
   }
 
-  const safeContext = {
-    riskLabel: isRiskLabel(body.riskLabel) ? body.riskLabel : 'watchful',
-    safetyRangeLow: toSafeNumber(body.safetyRangeLow),
-    safetyRangeHigh: toSafeNumber(body.safetyRangeHigh),
-    recentAverage: toSafeNumber(body.recentAverage),
-  };
+  const apiKey = process.env.OPENAI_API_KEY;
 
+  if (!apiKey) {
+    logDevelopmentError('Missing OPENAI_API_KEY');
+    return fallbackResponse();
+  }
+
+  const safeContext = toSafeAdviceContext(parsedBody);
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), OPENAI_TIMEOUT_MS);
 
@@ -41,7 +47,7 @@ export async function POST(request: Request) {
     const response = await fetch(OPENAI_RESPONSES_URL, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       signal: controller.signal,
@@ -54,12 +60,7 @@ export async function POST(request: Request) {
             content: [
               {
                 type: 'input_text',
-                text: JSON.stringify({
-                  riskLabel: safeContext.riskLabel,
-                  safetyRangeLow: safeContext.safetyRangeLow,
-                  safetyRangeHigh: safeContext.safetyRangeHigh,
-                  recentAverage: safeContext.recentAverage,
-                }),
+                text: JSON.stringify(safeContext),
               },
             ],
           },
@@ -69,33 +70,79 @@ export async function POST(request: Request) {
 
     if (!response.ok) {
       const errorBody = await response.text();
+      logDevelopmentError('OpenAI API error', {
+        status: response.status,
+        body: errorBody,
+      });
 
-      if (process.env.NODE_ENV === 'development') {
-        console.error('OpenAI API error', {
-          status: response.status,
-          body: errorBody,
-        });
-      }
-
-      return Response.json({ advice: FALLBACK_ADVICE }, { status: 502 });
+      return fallbackResponse();
     }
 
     const data = (await response.json()) as OpenAIResponse;
+    const advice = data.output_text?.trim();
 
-    return Response.json({
-      advice: data.output_text?.trim() || FALLBACK_ADVICE,
-    });
-  } catch {
-    return Response.json({ advice: FALLBACK_ADVICE }, { status: 502 });
+    if (!advice) {
+      logDevelopmentError('OpenAI API returned empty advice');
+      return fallbackResponse();
+    }
+
+    return Response.json({ advice });
+  } catch (error) {
+    logDevelopmentError('OpenAI advice request failed', error);
+    return fallbackResponse();
   } finally {
     clearTimeout(timeout);
   }
 }
 
-function isRiskLabel(value: unknown): value is NonNullable<AdviceRequestBody['riskLabel']> {
+async function parseRequestBody(request: Request): Promise<AdviceRequestBody | null> {
+  try {
+    const body = (await request.json()) as unknown;
+
+    if (!isRecord(body)) {
+      return null;
+    }
+
+    return body;
+  } catch (error) {
+    logDevelopmentError('Failed to parse advice request JSON', error);
+    return null;
+  }
+}
+
+function toSafeAdviceContext(body: AdviceRequestBody): SafeAdviceContext {
+  return {
+    riskLabel: isRiskLabel(body.riskLabel) ? body.riskLabel : 'watchful',
+    zoneLabel: toSafeLabel(body.zoneLabel, 'Watchful zone'),
+    paceLabel: toSafeLabel(body.paceLabel, 'Pace is tightening'),
+  };
+}
+
+function isRecord(value: unknown): value is AdviceRequestBody {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isRiskLabel(value: unknown): value is RiskLabel {
   return value === 'safe' || value === 'watchful' || value === 'fragile';
 }
 
-function toSafeNumber(value: unknown): number {
-  return typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : 0;
+function toSafeLabel(value: unknown, fallback: string): string {
+  return typeof value === 'string' && value.trim().length > 0 ? value.trim() : fallback;
+}
+
+function fallbackResponse(): Response {
+  return Response.json({ advice: FALLBACK_ADVICE });
+}
+
+function logDevelopmentError(message: string, error?: unknown) {
+  if (process.env.NODE_ENV !== 'development') {
+    return;
+  }
+
+  if (error === undefined) {
+    console.error(message);
+    return;
+  }
+
+  console.error(message, error);
 }
