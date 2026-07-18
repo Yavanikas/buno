@@ -110,7 +110,7 @@ export default function ProbabilityWindow({
     return () => {
       isMounted = false;
     };
-  }, [safePaceLabel, safeRiskLabel, safeZoneLabel]);
+  }, [riskLabel, zoneLabel, paceLabel]);
 
   if (isLoading) {
     return <ProbabilityWindowSkeleton />;
