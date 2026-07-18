@@ -51,7 +51,7 @@ export function getSpentSoFar(expenses: Expense[]): number {
     return 0;
   }
 
-  return expenses.reduce((total, expense) => total + toSafeNumber(expense.amount), 0);
+  return expenses.reduce((total, expense) => total + toSafeNumber(expense?.amount), 0);
 }
 
 // Subtracts the spent money from the full budget to show what is still left.
@@ -105,7 +105,13 @@ export function getRecentAverage(expenses: Expense[], lastNDays: number): number
     return 0;
   }
 
-  const expenseTimes = expenses
+  const safeExpenses = expenses.filter(isExpenseLike);
+
+  if (safeExpenses.length === 0) {
+    return 0;
+  }
+
+  const expenseTimes = safeExpenses
     .map((expense) => toStartOfDay(expense.date).getTime())
     .filter(Number.isFinite);
 
@@ -116,7 +122,7 @@ export function getRecentAverage(expenses: Expense[], lastNDays: number): number
   const latestExpenseTime = Math.max(...expenseTimes);
   const millisecondsPerDay = 24 * 60 * 60 * 1000;
   const firstIncludedDay = latestExpenseTime - (safeLastNDays - 1) * millisecondsPerDay;
-  const recentTotal = expenses.reduce((total, expense) => {
+  const recentTotal = safeExpenses.reduce((total, expense) => {
     const expenseTime = toStartOfDay(expense.date).getTime();
 
     if (
@@ -175,12 +181,16 @@ function getQualitativeBudgetState(riskLabel: RiskLabel): BudgetState {
   };
 }
 
+function isExpenseLike(value: unknown): value is Expense {
+  return typeof value === 'object' && value !== null;
+}
+
 function toSafeNumber(value: unknown): number {
   return typeof value === 'number' && Number.isFinite(value) ? value : 0;
 }
 
-function toStartOfDay(date: Date | string): Date {
-  const parsedDate = new Date(date);
+function toStartOfDay(date: unknown): Date {
+  const parsedDate = date instanceof Date || typeof date === 'string' ? new Date(date) : new Date(Number.NaN);
 
   return new Date(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate());
 }
