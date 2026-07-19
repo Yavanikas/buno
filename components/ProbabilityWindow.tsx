@@ -21,7 +21,6 @@ type AdviceResponse = {
 type RiskBadgeStyle = {
   label: string;
   className: string;
-  dotClassName: string;
 };
 
 const FALLBACK_ADVICE = 'Keep an eye on your pace today.';
@@ -29,18 +28,15 @@ const FALLBACK_ADVICE = 'Keep an eye on your pace today.';
 const riskBadgeStyles: Record<RiskLabel, RiskBadgeStyle> = {
   safe: {
     label: 'Safe',
-    className: 'border-[#d6b07d]/60 bg-[#6d4735]/70 text-[#fff7ed]',
-    dotClassName: 'bg-[#99c28a]',
+    className: 'border-green-200 bg-green-50 text-green-700',
   },
   watchful: {
     label: 'Watchful',
-    className: 'border-[#d6a15e]/70 bg-[#6d4735]/70 text-[#fff7ed]',
-    dotClassName: 'bg-[#d8a35d]',
+    className: 'border-yellow-200 bg-yellow-50 text-yellow-800',
   },
   fragile: {
     label: 'Fragile',
-    className: 'border-[#d28d78]/70 bg-[#6d4735]/70 text-[#fff7ed]',
-    dotClassName: 'bg-[#d98268]',
+    className: 'border-red-200 bg-red-50 text-red-700',
   },
 };
 
@@ -120,28 +116,23 @@ export default function ProbabilityWindow({
   }
 
   return (
-    <section className="overflow-hidden rounded-[2.25rem] border border-[#6f4938] bg-[radial-gradient(circle_at_top_left,#704634,#3f241b_58%,#2f1a14)] p-6 text-[#fff7ed] shadow-[0_28px_70px_rgba(76,45,33,0.28)] sm:p-8 lg:p-10">
-      <div className="flex min-w-0 flex-col gap-10">
-        <div className="flex items-start justify-between gap-4">
-          <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#d8c1ad]">Today&apos;s Spending Window</p>
-          <div
-            className={`inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-2 text-sm font-medium shadow-inner ${riskBadge.className}`}
-            aria-label={`Current spending risk: ${riskBadge.label}`}
-          >
-            <span className={`h-3 w-3 rounded-full ${riskBadge.dotClassName}`} aria-hidden="true" />
-            {riskBadge.label}
+    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md">
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex max-w-prose flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <h2 className="text-lg font-semibold text-slate-950">Today&apos;s Spending Window</h2>
+            <p className="text-2xl font-bold tracking-tight text-slate-950">{safeZoneLabel}</p>
+            <p className="text-sm font-medium text-slate-600">{safePaceLabel}</p>
           </div>
+
+          <p className="max-w-prose text-sm leading-6 text-slate-600">{advice}</p>
         </div>
 
-        <div className="mx-auto flex max-w-3xl flex-col items-center gap-5 py-2 text-center sm:py-6">
-          <div className="flex flex-col gap-3">
-            <h2 className="break-words text-5xl font-semibold tracking-tight text-[#fffaf3] sm:text-6xl lg:text-7xl">
-              {safeZoneLabel}
-            </h2>
-            <p className="text-xl leading-8 text-[#ead5c2] sm:text-2xl">{safePaceLabel}</p>
-          </div>
-
-          <p className="max-w-xl break-words text-sm leading-6 text-[#d8c1ad] sm:text-base">{advice}</p>
+        <div
+          className={`inline-flex w-fit items-center rounded-full border px-3 py-1 text-sm font-medium ${riskBadge.className}`}
+          aria-label={`Current spending risk: ${riskBadge.label}`}
+        >
+          {riskBadge.label}
         </div>
       </div>
     </section>
@@ -183,20 +174,21 @@ function containsExactAmount(value: string): boolean {
 function ProbabilityWindowSkeleton() {
   return (
     <section
-      className="overflow-hidden rounded-[2.25rem] border border-[#6f4938] bg-[#4b2c22] p-6 shadow-[0_28px_70px_rgba(76,45,33,0.28)] sm:p-8 lg:p-10"
+      className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md"
       aria-label="Loading today's spending window"
     >
-      <div className="flex animate-pulse flex-col gap-10">
-        <div className="flex items-start justify-between gap-4">
-          <div className="h-4 w-48 max-w-full rounded bg-[#7b5749]" />
-          <div className="h-9 w-28 shrink-0 rounded-full bg-[#7b5749]" />
+      <div className="flex animate-pulse flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-1 flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <div className="h-5 w-48 rounded bg-slate-200" />
+            <div className="h-8 w-44 rounded bg-slate-200" />
+            <div className="h-4 w-40 rounded bg-slate-200" />
+          </div>
+
+          <div className="h-4 max-w-prose rounded bg-slate-200" />
         </div>
 
-        <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-5 py-2 sm:py-6">
-          <div className="h-14 w-64 max-w-full rounded bg-[#7b5749] sm:h-16" />
-          <div className="h-6 w-52 max-w-full rounded bg-[#7b5749]" />
-          <div className="h-4 w-full max-w-xl rounded bg-[#7b5749]" />
-        </div>
+        <div className="h-7 w-24 rounded-full bg-slate-200" />
       </div>
     </section>
   );
