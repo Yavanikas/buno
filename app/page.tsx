@@ -41,6 +41,10 @@ export default function Home() {
       }),
     [daysRemaining, expenses],
   );
+  const recentExpenses = useMemo(
+    () => [...expenses].sort((firstExpense, secondExpense) => getExpenseTime(secondExpense) - getExpenseTime(firstExpense)),
+    [expenses],
+  );
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -173,6 +177,59 @@ export default function Home() {
         zoneLabel={budgetState.zoneLabel}
         paceLabel={budgetState.paceLabel}
       />
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-lg font-semibold text-slate-950">Recent expenses</h2>
+          <p className="text-sm text-slate-600">Your latest logged expenses for this demo session.</p>
+        </div>
+
+        {recentExpenses.length > 0 ? (
+          <div className="mt-5 divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200">
+            {recentExpenses.map((expense, index) => (
+              <div
+                className="grid gap-3 bg-white p-4 sm:grid-cols-[1fr_auto] sm:items-center"
+                key={`${expense.date}-${expense.category}-${expense.note}-${index}`}
+              >
+                <div className="flex flex-col gap-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium capitalize text-slate-700">
+                      {expense.category}
+                    </span>
+                    <span className="text-xs text-slate-500">{formatExpenseDate(expense.date)}</span>
+                  </div>
+                  <p className="text-sm font-medium text-slate-950">{expense.note}</p>
+                </div>
+
+                <p className="text-sm font-semibold text-slate-950">₹{expense.amount.toLocaleString('en-IN')}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+            No expenses yet. Add your first expense above when you are ready.
+          </p>
+        )}
+      </section>
     </main>
   );
+}
+
+function getExpenseTime(expense: MockExpense): number {
+  const time = new Date(expense.date).getTime();
+
+  return Number.isFinite(time) ? time : 0;
+}
+
+function formatExpenseDate(date: Date | string): string {
+  const parsedDate = new Date(date);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return 'Date not set';
+  }
+
+  return parsedDate.toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+  });
 }
