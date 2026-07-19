@@ -1,6 +1,7 @@
 'use client';
 
 import { type FormEvent, useMemo, useState } from 'react';
+import PatternInsight from '../components/PatternInsight';
 import ProbabilityWindow from '../components/ProbabilityWindow';
 import { mockExpenses, type MockExpense } from '../data/mockExpenses';
 import { getBudgetState, getRemainingDays } from '../lib/calc';
@@ -87,7 +88,7 @@ export default function Home() {
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Monthly budget</p>
-            <p className="mt-2 text-xl font-semibold text-slate-950">₹{monthlyBudget.toLocaleString('en-IN')}</p>
+            <p className="mt-2 text-xl font-semibold text-slate-950">Set for this cycle</p>
           </div>
 
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
@@ -115,7 +116,7 @@ export default function Home() {
               className="rounded-xl border border-slate-200 px-3 py-2 text-slate-950 outline-none focus:border-slate-400"
               min="1"
               onChange={(event) => setAmount(event.target.value)}
-              placeholder="e.g. 120"
+              placeholder="Enter amount"
               required
               type="number"
               value={amount}
@@ -178,6 +179,12 @@ export default function Home() {
         paceLabel={budgetState.paceLabel}
       />
 
+      <PatternInsight
+        riskLabel={budgetState.riskLabel}
+        recentExpenses={expenses}
+        daysRemaining={daysRemaining}
+      />
+
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md">
         <div className="flex flex-col gap-1">
           <h2 className="text-lg font-semibold text-slate-950">Recent expenses</h2>
@@ -201,7 +208,7 @@ export default function Home() {
                   <p className="text-sm font-medium text-slate-950">{expense.note}</p>
                 </div>
 
-                <p className="text-sm font-semibold text-slate-950">₹{expense.amount.toLocaleString('en-IN')}</p>
+                <p className="text-sm font-semibold text-slate-950">{getExpenseSizeLabel(expense.amount)}</p>
               </div>
             ))}
           </div>
@@ -232,4 +239,20 @@ function formatExpenseDate(date: Date | string): string {
     day: 'numeric',
     month: 'short',
   });
+}
+
+function getExpenseSizeLabel(amount: number): string {
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return 'Spend logged';
+  }
+
+  if (amount <= 150) {
+    return 'Small spend';
+  }
+
+  if (amount <= 500) {
+    return 'Medium spend';
+  }
+
+  return 'Larger spend';
 }
