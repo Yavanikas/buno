@@ -5,8 +5,9 @@ import PatternInsight from '../components/PatternInsight';
 import ProbabilityWindow from '../components/ProbabilityWindow';
 import { mockExpenses, type MockExpense } from '../data/mockExpenses';
 import { getBudgetState, getRemainingDays } from '../lib/calc';
+import { getMonthlyPatternSummary, type MonthlyPatternSummary } from '../lib/patterns';
 
-const monthlyBudget = 8000;
+const initialMonthlyBudget = 8000;
 const expenseCategories: MockExpense['category'][] = [
   'food',
   'transport',
@@ -17,12 +18,25 @@ const expenseCategories: MockExpense['category'][] = [
   'personal care',
 ];
 
+type ActiveTab = 'overview' | 'patterns' | 'settings';
+type SessionExpense = MockExpense & { id: string };
+
 function getTodayInputValue() {
   return new Date().toISOString().slice(0, 10);
 }
 
 export default function Home() {
-  const [expenses, setExpenses] = useState<MockExpense[]>(mockExpenses);
+  const [activeTab, setActiveTab] = useState<ActiveTab>('overview');
+  const [monthlyBudget, setMonthlyBudget] = useState(initialMonthlyBudget);
+  const [budgetInput, setBudgetInput] = useState(String(initialMonthlyBudget));
+  const [isEditingBudget, setIsEditingBudget] = useState(false);
+  const [budgetMessage, setBudgetMessage] = useState('');
+  const [expenses, setExpenses] = useState<SessionExpense[]>(() =>
+    mockExpenses.map((expense, index) => ({
+      ...expense,
+      id: createExpenseId(expense, index),
+    })),
+  );
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState<MockExpense['category']>('food');
   const [note, setNote] = useState('');
@@ -40,7 +54,7 @@ export default function Home() {
         expenses,
         remainingDays: daysRemaining,
       }),
-    [daysRemaining, expenses],
+    [daysRemaining, expenses, monthlyBudget],
   );
   const recentExpenses = useMemo(
     () =>
@@ -48,6 +62,10 @@ export default function Home() {
         (firstExpense, secondExpense) => getExpenseTime(secondExpense) - getExpenseTime(firstExpense),
       ),
     [expenses],
+  );
+  const monthlyPatternSummary = useMemo(
+    () => getMonthlyPatternSummary(expenses, today),
+    [expenses, today],
   );
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -64,6 +82,7 @@ export default function Home() {
     setExpenses((currentExpenses) => [
       ...currentExpenses,
       {
+        id: createNewExpenseId({ amount: parsedAmount, category, date, note: trimmedNote }, currentExpenses.length),
         amount: parsedAmount,
         category,
         date,
@@ -75,6 +94,32 @@ export default function Home() {
     setNote('');
     setDate(getTodayInputValue());
     setFormMessage('Expense added for this session.');
+  }
+
+  function handleBudgetSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const parsedBudget = Number(budgetInput);
+
+    if (!Number.isFinite(parsedBudget) || parsedBudget <= 0) {
+      setBudgetMessage('Enter a monthly budget greater than zero.');
+      return;
+    }
+
+    setMonthlyBudget(parsedBudget);
+    setBudgetInput(String(Math.round(parsedBudget)));
+    setIsEditingBudget(false);
+    setBudgetMessage('Monthly budget updated for this session.');
+  }
+
+  function handleDeleteExpense(expenseId: unknown) {
+    if (typeof expenseId !== 'string' || !expenseId.trim()) {
+      setFormMessage('Could not delete that expense. Please try again.');
+      return;
+    }
+
+    setExpenses((currentExpenses) => currentExpenses.filter((expense) => expense.id !== expenseId));
+    setFormMessage('Expense deleted for this session.');
   }
 
   return (
