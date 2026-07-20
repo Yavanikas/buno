@@ -140,13 +140,21 @@ export function getMonthlyPatternSummary(
 ): MonthlyPatternSummary {
   const normalizedExpenses = normalizeExpenses(expenses);
   const safeCurrentDate = toStartOfDay(currentDate);
+
+  if (!Number.isFinite(safeCurrentDate.getTime())) {
+    return createEmptyMonthlySummary();
+  }
+
   const currentMonth = safeCurrentDate.getMonth();
   const currentYear = safeCurrentDate.getFullYear();
+
   const monthlyExpenses = normalizedExpenses.filter(
-    (expense) => expense.date.getMonth() === currentMonth && expense.date.getFullYear() === currentYear,
+    (expense) =>
+      expense.date.getMonth() === currentMonth &&
+      expense.date.getFullYear() === currentYear,
   );
 
-  if (!Number.isFinite(safeCurrentDate.getTime()) || monthlyExpenses.length === 0) {
+  if (monthlyExpenses.length === 0) {
     return createEmptyMonthlySummary();
   }
 
@@ -171,7 +179,8 @@ export function getMonthlyPatternSummary(
 
   const categoryFrequencyBreakdown = [...categoryFrequency.entries()]
     .map(([category, count]) => ({ category, count }))
-    .sort((firstCategory, secondCategory) => secondCategory.count - firstCategory.count);
+    .sort((a, b) => b.count - a.count);
+
   const mostFrequentCategory = categoryFrequencyBreakdown[0]?.category ?? 'not enough data';
   const hasRepeatedSmallPurchases =
     monthlyExpenses.length >= 4 && smallPurchaseCount / monthlyExpenses.length >= 0.45;
@@ -324,19 +333,16 @@ function getAmountSize(amount: number): PatternExpenseSample['size'] {
 
 function isWeekend(date: Date): boolean {
   const day = date.getDay();
-
   return day === 0 || day === 6;
 }
 
 function clampWholeNumber(value: unknown, minimum: number, fallback: number): number {
   const safeValue = Math.floor(toSafeNumber(value));
-
   return safeValue >= minimum ? safeValue : fallback;
 }
 
 function toNullableWholeNumber(value: unknown): number | null {
   const safeValue = Math.floor(toSafeNumber(value));
-
   return safeValue >= 0 ? safeValue : null;
 }
 
@@ -363,9 +369,16 @@ function containsExactAmount(value: string): boolean {
 }
 
 function toStartOfDay(date: unknown): Date {
-  const parsedDate = date instanceof Date || typeof date === 'string' ? new Date(date) : new Date(Number.NaN);
+  const parsedDate =
+    date instanceof Date || typeof date === 'string'
+      ? new Date(date)
+      : new Date(Number.NaN);
 
-  return new Date(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate());
+  return new Date(
+    parsedDate.getFullYear(),
+    parsedDate.getMonth(),
+    parsedDate.getDate(),
+  );
 }
 
 function getMillisecondsPerDay(): number {
