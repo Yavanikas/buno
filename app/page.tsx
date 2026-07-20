@@ -21,6 +21,42 @@ const expenseCategories: MockExpense['category'][] = [
 type ActiveTab = 'overview' | 'patterns' | 'settings';
 type SessionExpense = MockExpense & { id: string };
 
+function createExpenseId(
+  expense: { date?: string | Date; category?: string; amount?: number; note?: string },
+  index: number,
+): string {
+  const safeDate =
+    typeof expense.date === 'string'
+      ? expense.date
+      : expense.date instanceof Date && !Number.isNaN(expense.date.getTime())
+        ? expense.date.toISOString()
+        : 'unknown-date';
+
+  const safeCategory =
+    typeof expense.category === 'string' && expense.category.trim()
+      ? expense.category.trim().toLowerCase().replace(/\s+/g, '-')
+      : 'uncategorized';
+
+  const safeAmount =
+    typeof expense.amount === 'number' && Number.isFinite(expense.amount)
+      ? String(expense.amount)
+      : '0';
+
+  const safeNote =
+    typeof expense.note === 'string' && expense.note.trim()
+      ? expense.note.trim().toLowerCase().replace(/\s+/g, '-')
+      : 'expense';
+
+  return `${safeDate}-${safeCategory}-${safeAmount}-${safeNote}-${index}`;
+}
+
+function createNewExpenseId(
+  expense: { date?: string | Date; category?: string; amount?: number; note?: string },
+  index: number,
+): string {
+  return createExpenseId(expense, index);
+}
+
 function getTodayInputValue() {
   return new Date().toISOString().slice(0, 10);
 }
