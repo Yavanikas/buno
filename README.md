@@ -1,4 +1,4 @@
-##Buno
+## Buno
 
 A Next.js budgeting web app to set a monthly budget, log expenses, 
 and analyze spending patterns over time without giving the actual figures
