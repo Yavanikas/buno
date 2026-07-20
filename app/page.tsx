@@ -219,15 +219,7 @@ export default function Home() {
                   </section>
 
                   <div className="flex min-w-0 flex-col gap-6">
-                    <ProbabilityWindow
-                      riskLabel={budgetState.riskLabel}
-                      zoneLabel={budgetState.zoneLabel}
-                      paceLabel={budgetState.paceLabel}
-                    />
-                  </div>
-                </div>
-
-                <section className="rounded-[1.75rem] border border-[#ead9c8] bg-[#fffaf3] p-5 shadow-[0_18px_48px_rgba(76,45,33,0.10)] sm:p-6">
+                    <section className="rounded-[1.75rem] border border-[#ead9c8] bg-[#fffaf3] p-5 shadow-[0_18px_48px_rgba(76,45,33,0.10)] sm:p-6">
                       <div className="mb-5 flex flex-col gap-1">
                         <h2 className="text-2xl font-bold tracking-tight text-[#3a2118]">Monthly Budget</h2>
                         <p className="text-sm text-[#7d6253]">Your core budget setup for this month.</p>
@@ -284,6 +276,27 @@ export default function Home() {
                         <SummaryTile label="Expenses logged" value={String(totalExpensesLogged)} />
                       </div>
                     </section>
+
+                    <ProbabilityWindow
+                      riskLabel={budgetState.riskLabel}
+                      zoneLabel={budgetState.zoneLabel}
+                      paceLabel={budgetState.paceLabel}
+                    />
+                  </div>
+                </div>
+
+                <section className="rounded-[1.75rem] border border-[#ead9c8] bg-[#fffaf3] p-5 shadow-[0_18px_48px_rgba(76,45,33,0.10)] sm:p-6">
+                  <div className="flex flex-col gap-1">
+                    <h2 className="text-2xl font-bold tracking-tight text-[#3a2118]">Monthly Spending Patterns</h2>
+                    <p className="text-sm text-[#7d6253]">Deterministic analysis based on your activity this month.</p>
+                  </div>
+
+                  <div className="mt-5 grid gap-4 md:grid-cols-3">
+                    <PatternSummaryItem label="Most frequent" value={toTitleCase(monthlyPatternSummary.mostFrequentCategory)} />
+                    <PatternSummaryItem label="Weekly split" value={`${monthlyPatternSummary.weekdayExpenseCount} weekday / ${monthlyPatternSummary.weekendExpenseCount} weekend`} />
+                    <PatternSummaryItem label="Small spends" value={monthlyPatternSummary.hasRepeatedSmallPurchases ? 'Repeating often' : 'Well spaced'} />
+                  </div>
+                </section>
 
                 <section className="rounded-[1.75rem] border border-[#ead9c8] bg-[#fffaf3] p-5 shadow-[0_18px_48px_rgba(76,45,33,0.10)] sm:p-6">
                   <div className="flex flex-col gap-1">
@@ -613,6 +626,21 @@ function SummaryTile({
         <p className="mt-2 break-words text-lg font-bold text-[#3a2118]">{value}</p>
       </div>
       {action && <div className="mt-2">{action}</div>}
+    </div>
+  );
+}
+
+function PatternSummaryItem({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-[#efe2d4] bg-white/60 p-4">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#9b7968]">{label}</p>
+      <p className="mt-2 text-base font-semibold text-[#3a2118]">{value}</p>
     </div>
   );
 }
