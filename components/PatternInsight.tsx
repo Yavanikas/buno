@@ -94,18 +94,18 @@ export default function PatternInsight({
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md">
+    <section className="rounded-[1.75rem] border border-[#ead9c8] bg-[#fffaf3] p-5 shadow-[0_18px_48px_rgba(76,45,33,0.10)] sm:p-6">
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-lg font-semibold text-slate-950">Pattern Insight</h2>
-          <span className="w-fit rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">
+          <h2 className="text-xl font-bold tracking-tight text-[#3a2118]">Pattern Insight</h2>
+          <span className="w-fit rounded-full border border-[#ead9c8] bg-[#f3e6d8] px-3 py-1 text-xs font-semibold capitalize text-[#6e4d3f]">
             {patternInsight.patternTag}
           </span>
         </div>
 
-        <p className="max-w-prose text-sm leading-6 text-slate-600">{patternInsight.insight}</p>
+        <p className="max-w-prose text-sm leading-6 text-[#735747]">{patternInsight.insight}</p>
 
-        <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+        <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#a48673]">
           Confidence: {patternInsight.confidence}
         </p>
       </div>
@@ -155,14 +155,14 @@ function containsExactAmount(value: string): boolean {
 
 function PatternInsightSkeleton() {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md" aria-label="Loading pattern insight">
+    <section className="rounded-[1.75rem] border border-[#ead9c8] bg-[#fffaf3] p-5 shadow-[0_18px_48px_rgba(76,45,33,0.10)] sm:p-6" aria-label="Loading pattern insight">
       <div className="flex animate-pulse flex-col gap-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div className="h-5 w-36 rounded bg-slate-200" />
-          <div className="h-7 w-32 rounded-full bg-slate-200" />
+          <div className="h-5 w-36 rounded bg-[#ead9c8]" />
+          <div className="h-7 w-32 rounded-full bg-[#ead9c8]" />
         </div>
-        <div className="h-4 max-w-prose rounded bg-slate-200" />
-        <div className="h-3 w-24 rounded bg-slate-200" />
+        <div className="h-4 max-w-prose rounded bg-[#ead9c8]" />
+        <div className="h-3 w-24 rounded bg-[#ead9c8]" />
       </div>
     </section>
   );

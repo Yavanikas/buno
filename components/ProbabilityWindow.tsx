@@ -7,7 +7,7 @@ type RiskLabel = BudgetState['riskLabel'];
 type ZoneLabel = BudgetState['zoneLabel'];
 type PaceLabel = BudgetState['paceLabel'];
 
-type ProbabilityWindowProps = {
+type ProbabilityWindowProps = { 
   riskLabel: RiskLabel;
   zoneLabel?: ZoneLabel;
   paceLabel?: PaceLabel;
@@ -116,16 +116,16 @@ export default function ProbabilityWindow({
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md">
+    <section className="rounded-[1.75rem] border border-[#ead9c8] bg-[#fffaf3] p-5 shadow-[0_18px_48px_rgba(76,45,33,0.10)] sm:p-6">
       <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex max-w-prose flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <h2 className="text-lg font-semibold text-slate-950">Today&apos;s Spending Window</h2>
-            <p className="text-2xl font-bold tracking-tight text-slate-950">{safeZoneLabel}</p>
-            <p className="text-sm font-medium text-slate-600">{safePaceLabel}</p>
+            <h2 className="text-xl font-bold tracking-tight text-[#3a2118]">Today&apos;s Spending Window</h2>
+            <p className="text-2xl font-bold tracking-tight text-[#3a2118]">{safeZoneLabel}</p>
+            <p className="text-sm font-semibold text-[#7d6253]">{safePaceLabel}</p>
           </div>
 
-          <p className="max-w-prose text-sm leading-6 text-slate-600">{advice}</p>
+          <p className="max-w-prose text-sm leading-6 text-[#735747]">{advice}</p>
         </div>
 
         <div
@@ -174,21 +174,21 @@ function containsExactAmount(value: string): boolean {
 function ProbabilityWindowSkeleton() {
   return (
     <section
-      className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md"
+      className="rounded-[1.75rem] border border-[#ead9c8] bg-[#fffaf3] p-5 shadow-[0_18px_48px_rgba(76,45,33,0.10)] sm:p-6"
       aria-label="Loading today's spending window"
     >
       <div className="flex animate-pulse flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex flex-1 flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <div className="h-5 w-48 rounded bg-slate-200" />
-            <div className="h-8 w-44 rounded bg-slate-200" />
-            <div className="h-4 w-40 rounded bg-slate-200" />
+            <div className="h-5 w-48 rounded bg-[#ead9c8]" />
+            <div className="h-8 w-44 rounded bg-[#ead9c8]" />
+            <div className="h-4 w-40 rounded bg-[#ead9c8]" />
           </div>
 
-          <div className="h-4 max-w-prose rounded bg-slate-200" />
+          <div className="h-4 max-w-prose rounded bg-[#ead9c8]" />
         </div>
 
-        <div className="h-7 w-24 rounded-full bg-slate-200" />
+        <div className="h-7 w-24 rounded-full bg-[#ead9c8]" />
       </div>
     </section>
   );
