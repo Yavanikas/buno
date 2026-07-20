@@ -188,84 +188,153 @@ export default function Home() {
           </nav>
         </aside>
 
-        <div className="flex min-w-0 flex-1 flex-col gap-6 lg:gap-8">
-          <header className="flex flex-col gap-6 rounded-[2rem] border border-[#ead9c8] bg-[#fffaf3]/85 p-5 shadow-[0_20px_60px_rgba(76,45,33,0.10)] sm:p-7">
-            <div className="flex flex-col gap-2">
-              <h1 className="text-4xl font-black tracking-wide text-[#8B4513] sm:text-5xl" style={{ fontFamily: '"Nunito", "Arial Rounded MT Bold", "Varela Round", system-ui, sans-serif', letterSpacing: '0.06em' }}>
-                BUNO
-              </h1>
-              <p className="max-w-2xl text-sm leading-6 text-[#735747] sm:text-base">
-                A calm student budget assistant that tracks your setup, reads your spending pace, and keeps guidance qualitative.
-              </p>
-            </div>
+        <div className="min-w-0 flex-1">
+          {activeTab === 'overview' && (
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
+              <div className="flex min-w-0 flex-col gap-6 lg:col-span-2 lg:gap-8">
+                <header className="flex flex-col gap-3 rounded-[2rem] border border-[#ead9c8] bg-[#fffaf3]/85 p-5 shadow-[0_20px_60px_rgba(76,45,33,0.10)] sm:p-7">
+                  <h1 className="text-4xl font-black tracking-wide text-[#8B4513] sm:text-5xl" style={{ fontFamily: '"Nunito", "Arial Rounded MT Bold", "Varela Round", system-ui, sans-serif', letterSpacing: '0.06em' }}>
+                    BUNO
+                  </h1>
+                  <p className="max-w-2xl text-sm leading-6 text-[#735747] sm:text-base">
+                    A calm student budget assistant that tracks your setup, reads your spending pace, and keeps guidance qualitative.
+                  </p>
+                </header>
 
-            <div className="grid gap-3 sm:grid-cols-3">
-              {isEditingBudget ? (
-                <form onSubmit={handleBudgetSubmit} className="min-w-0 rounded-3xl border border-[#ead9c8] bg-white/70 p-4 flex flex-col justify-between">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#a48673]">Monthly budget</p>
-                    <input
-                      type="number"
-                      value={budgetInput}
-                      onChange={(e) => setBudgetInput(e.target.value)}
-                      className="mt-2 w-full rounded-xl border border-[#ead9c8] bg-white px-2 py-1 text-sm text-[#3a2118] outline-none"
-                      min="1"
-                      required
+                <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(260px,0.75fr)_minmax(0,1.25fr)]">
+                  <section className="flex min-h-[26rem] flex-col justify-between rounded-[1.75rem] border border-[#ead9c8] bg-[#fffaf3] p-5 shadow-[0_18px_48px_rgba(76,45,33,0.10)] sm:p-6">
+                    <div className="flex flex-col gap-1">
+                      <h2 className="text-2xl font-bold tracking-tight text-[#3a2118]">Activity Rhythm</h2>
+                      <p className="text-sm text-[#7d6253]">{monthlyPatternSummary.currentMonthActivitySummary}</p>
+                    </div>
+
+                    <div className="mt-6 grid gap-3">
+                      <SummaryTile label="This month" value={`${monthlyPatternSummary.totalExpensesThisMonth} logs`} />
+                      <SummaryTile label="Top category" value={toTitleCase(monthlyPatternSummary.mostFrequentCategory)} />
+                      <SummaryTile
+                        label="Rhythm"
+                        value={monthlyPatternSummary.hasClusteredSpending ? 'Clustered' : 'Steady'}
+                      />
+                    </div>
+                  </section>
+
+                  <div className="flex min-w-0 flex-col gap-6">
+                    <section className="rounded-[1.75rem] border border-[#ead9c8] bg-[#fffaf3] p-5 shadow-[0_18px_48px_rgba(76,45,33,0.10)] sm:p-6">
+                      <div className="mb-5 flex flex-col gap-1">
+                        <h2 className="text-2xl font-bold tracking-tight text-[#3a2118]">Monthly Budget</h2>
+                        <p className="text-sm text-[#7d6253]">Your core budget setup for this month.</p>
+                      </div>
+
+                      <div className="grid gap-3 sm:grid-cols-3">
+                        {isEditingBudget ? (
+                          <form onSubmit={handleBudgetSubmit} className="min-w-0 rounded-3xl border border-[#ead9c8] bg-white/70 p-4 flex flex-col justify-between">
+                            <div>
+                              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#a48673]">Monthly budget</p>
+                              <input
+                                type="number"
+                                value={budgetInput}
+                                onChange={(e) => setBudgetInput(e.target.value)}
+                                className="mt-2 w-full rounded-xl border border-[#ead9c8] bg-white px-2 py-1 text-sm text-[#3a2118] outline-none"
+                                min="1"
+                                required
+                              />
+                            </div>
+                            <div className="flex gap-2 mt-2">
+                              <button type="submit" className="rounded-lg bg-[#4b2c22] px-3 py-1 text-xs font-bold text-[#fff7ed]">Save</button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setIsEditingBudget(false);
+                                  setBudgetInput(String(monthlyBudget));
+                                  setBudgetMessage('');
+                                }}
+                                className="rounded-lg bg-[#ead9c8] px-3 py-1 text-xs font-semibold text-[#6e4d3f]"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                            {budgetMessage && <p className="mt-1 text-[10px] text-[#7d6253] font-medium">{budgetMessage}</p>}
+                          </form>
+                        ) : (
+                          <SummaryTile
+                            label="Monthly budget"
+                            value={`₹${monthlyBudget}`}
+                            action={
+                              <button
+                                onClick={() => {
+                                  setIsEditingBudget(true);
+                                  setBudgetMessage('');
+                                }}
+                                className="text-xs font-semibold text-[#8a6557] hover:underline"
+                              >
+                                Change Budget
+                              </button>
+                            }
+                          />
+                        )}
+                        <SummaryTile label="Days remaining" value={String(daysRemaining)} />
+                        <SummaryTile label="Expenses logged" value={String(totalExpensesLogged)} />
+                      </div>
+                    </section>
+
+                    <ProbabilityWindow
+                      riskLabel={budgetState.riskLabel}
+                      zoneLabel={budgetState.zoneLabel}
+                      paceLabel={budgetState.paceLabel}
                     />
                   </div>
-                  <div className="flex gap-2 mt-2">
-                    <button
-                      type="submit"
-                      className="rounded-lg bg-[#4b2c22] px-3 py-1 text-xs font-bold text-[#fff7ed]"
-                    >
-                      Save
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsEditingBudget(false);
-                        setBudgetInput(String(monthlyBudget));
-                        setBudgetMessage('');
-                      }}
-                      className="rounded-lg bg-[#ead9c8] px-3 py-1 text-xs font-semibold text-[#6e4d3f]"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                  {budgetMessage && <p className="mt-1 text-[10px] text-[#7d6253] font-medium">{budgetMessage}</p>}
-                </form>
-              ) : (
-                <SummaryTile
-                  label="Monthly budget"
-                  value={`₹${monthlyBudget}`}
-                  action={
-                    <button
-                      onClick={() => {
-                        setIsEditingBudget(true);
-                        setBudgetMessage('');
-                      }}
-                      className="text-xs font-semibold text-[#8a6557] hover:underline"
-                    >
-                      Change Budget
-                    </button>
-                  }
-                />
-              )}
-              <SummaryTile label="Days remaining" value={String(daysRemaining)} />
-              <SummaryTile label="Expenses logged" value={String(totalExpensesLogged)} />
-            </div>
-          </header>
+                </div>
 
-          {activeTab === 'overview' && (
-            <>
-              <ProbabilityWindow
-                riskLabel={budgetState.riskLabel}
-                zoneLabel={budgetState.zoneLabel}
-                paceLabel={budgetState.paceLabel}
-              />
-
-              <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.72fr)]">
                 <section className="rounded-[1.75rem] border border-[#ead9c8] bg-[#fffaf3] p-5 shadow-[0_18px_48px_rgba(76,45,33,0.10)] sm:p-6">
+                  <div className="flex flex-col gap-1">
+                    <h2 className="text-2xl font-bold tracking-tight text-[#3a2118]">Monthly Spending Patterns</h2>
+                    <p className="text-sm text-[#7d6253]">Deterministic analysis based on your activity this month.</p>
+                  </div>
+
+                  <div className="mt-5 grid gap-4 md:grid-cols-3">
+                    <PatternSummaryItem label="Most frequent" value={toTitleCase(monthlyPatternSummary.mostFrequentCategory)} />
+                    <PatternSummaryItem label="Weekly split" value={`${monthlyPatternSummary.weekdayExpenseCount} weekday / ${monthlyPatternSummary.weekendExpenseCount} weekend`} />
+                    <PatternSummaryItem label="Small spends" value={monthlyPatternSummary.hasRepeatedSmallPurchases ? 'Repeating often' : 'Well spaced'} />
+                  </div>
+                </section>
+
+                <section className="rounded-[1.75rem] border border-[#ead9c8] bg-[#fffaf3] p-5 shadow-[0_18px_48px_rgba(76,45,33,0.10)] sm:p-6">
+                  <div className="flex flex-col gap-1">
+                    <h2 className="text-xl font-bold tracking-tight text-[#3a2118]">Add expense</h2>
+                    <p className="text-sm text-[#7d6253]">Log a simple expense for this demo session.</p>
+                  </div>
+
+                  <form className="mt-5 grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
+                    <label className="flex flex-col gap-2 text-sm font-semibold text-[#5d4035]">
+                      Amount
+                      <input className="min-w-0 rounded-2xl border border-[#ead9c8] bg-white/80 px-4 py-3 text-[#3a2118] outline-none transition placeholder:text-[#b79b89] focus:border-[#9a715f]" min="1" onChange={(event) => setAmount(event.target.value)} placeholder="Enter amount" required type="number" value={amount} />
+                    </label>
+                    <label className="flex flex-col gap-2 text-sm font-semibold text-[#5d4035]">
+                      Category
+                      <select className="min-w-0 rounded-2xl border border-[#ead9c8] bg-white/80 px-4 py-3 text-[#3a2118] outline-none transition focus:border-[#9a715f]" onChange={(event) => setCategory(event.target.value as MockExpense['category'])} value={category}>
+                        {expenseCategories.map((expenseCategory) => <option key={expenseCategory} value={expenseCategory}>{expenseCategory}</option>)}
+                      </select>
+                    </label>
+                    <label className="flex flex-col gap-2 text-sm font-semibold text-[#5d4035] md:col-span-2">
+                      Note
+                      <input className="min-w-0 rounded-2xl border border-[#ead9c8] bg-white/80 px-4 py-3 text-[#3a2118] outline-none transition placeholder:text-[#b79b89] focus:border-[#9a715f]" onChange={(event) => setNote(event.target.value)} placeholder="e.g. Canteen lunch" required type="text" value={note} />
+                    </label>
+                    <label className="flex flex-col gap-2 text-sm font-semibold text-[#5d4035]">
+                      Date
+                      <input className="min-w-0 rounded-2xl border border-[#ead9c8] bg-white/80 px-4 py-3 text-[#3a2118] outline-none transition focus:border-[#9a715f]" onChange={(event) => setDate(event.target.value)} required type="date" value={date} />
+                    </label>
+                    <div className="flex flex-col justify-end gap-2">
+                      <button className="rounded-2xl bg-[#4b2c22] px-5 py-3 text-sm font-bold text-[#fff7ed] shadow-[0_12px_28px_rgba(75,44,34,0.24)] transition hover:bg-[#5b382c]" type="submit">Add expense</button>
+                      {formMessage ? <p className="text-sm text-[#7d6253]">{formMessage}</p> : null}
+                    </div>
+                  </form>
+                </section>
+              </div>
+
+              <aside className="flex min-w-0 flex-col gap-6 rounded-[2rem] border border-[#f0d87b] bg-[#fef9c3] p-5 shadow-[0_24px_65px_rgba(154,116,35,0.18)] sm:p-6 lg:col-span-1 lg:min-h-[calc(100vh-4rem)]">
+                <PatternInsight riskLabel={budgetState.riskLabel} recentExpenses={expenses} daysRemaining={daysRemaining} />
+
+                <section className="min-w-0 rounded-[1.75rem] border border-[#eadf9a] bg-white/55 p-5 shadow-[0_14px_32px_rgba(154,116,35,0.10)]">
                   <div className="flex flex-col gap-1">
                     <h2 className="text-2xl font-bold tracking-tight text-[#3a2118]">Recent Activity</h2>
                     <p className="text-sm text-[#7d6253]">Your latest logged expenses for this demo session.</p>
@@ -274,119 +343,28 @@ export default function Home() {
                   {recentExpenses.length > 0 ? (
                     <div className="mt-5 flex flex-col gap-3">
                       {recentExpenses.slice(0, 6).map((expense) => (
-                        <div
-                          className="grid min-w-0 grid-cols-[3.5rem_minmax(0,1fr)] gap-4 rounded-2xl border border-[#efe2d4] bg-white/80 p-3 shadow-[0_12px_30px_rgba(76,45,33,0.08)] sm:grid-cols-[4rem_minmax(0,1fr)_auto] sm:items-center sm:p-4"
-                          key={expense.id}
-                        >
-                          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#8a6557] text-lg font-semibold uppercase text-[#fff7ed] shadow-inner">
-                            {getCategoryInitial(expense.category)}
-                          </div>
-
+                        <div className="grid min-w-0 grid-cols-[3.5rem_minmax(0,1fr)] gap-4 rounded-2xl border border-[#efe2d4] bg-white/80 p-3 shadow-[0_12px_30px_rgba(76,45,33,0.08)]" key={expense.id}>
+                          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#8a6557] text-lg font-semibold uppercase text-[#fff7ed] shadow-inner">{getCategoryInitial(expense.category)}</div>
                           <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
-                              <span className="text-xs font-medium uppercase tracking-[0.18em] text-[#b09380]">
-                                {formatExpenseDate(expense.date)}
-                              </span>
-                              <span className="rounded-full bg-[#f3e6d8] px-2.5 py-1 text-xs font-medium capitalize text-[#6e4d3f]">
-                                {expense.category}
-                              </span>
+                              <span className="text-xs font-medium uppercase tracking-[0.18em] text-[#b09380]">{formatExpenseDate(expense.date)}</span>
+                              <span className="rounded-full bg-[#f3e6d8] px-2.5 py-1 text-xs font-medium capitalize text-[#6e4d3f]">{expense.category}</span>
                             </div>
                             <p className="mt-1 break-words text-base font-semibold text-[#3a2118]">{expense.note}</p>
-                          </div>
-
-                          <div className="col-start-2 flex items-center justify-between gap-3 sm:col-start-auto sm:text-right sm:justify-end">
-                            <p className="text-sm font-semibold text-[#7d6253]">
-                              {getExpenseSizeLabel(expense.amount)}
-                            </p>
-                            <button
-                              onClick={() => handleDeleteExpense(expense.id)}
-                              className="rounded-lg px-2 py-1 text-xs font-medium text-[#c49a84] hover:bg-[#f3e6d8] hover:text-[#4b2c22] transition"
-                              title="Delete expense"
-                            >
-                              Delete
-                            </button>
+                            <div className="mt-2 flex items-center justify-between gap-3">
+                              <p className="text-sm font-semibold text-[#7d6253]">{getExpenseSizeLabel(expense.amount)}</p>
+                              <button onClick={() => handleDeleteExpense(expense.id)} className="rounded-lg px-2 py-1 text-xs font-medium text-[#c49a84] transition hover:bg-[#f3e6d8] hover:text-[#4b2c22]" title="Delete expense">Delete</button>
+                            </div>
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="mt-5 rounded-2xl border border-[#ead9c8] bg-white/70 p-4 text-sm text-[#7d6253]">
-                      No expenses yet. Add your first expense when you are ready.
-                    </p>
+                    <p className="mt-5 rounded-2xl border border-[#ead9c8] bg-white/70 p-4 text-sm text-[#7d6253]">No expenses yet. Add your first expense when you are ready.</p>
                   )}
                 </section>
-
-                <div className="flex min-w-0 flex-col gap-6">
-                  <section className="rounded-[1.75rem] border border-[#ead9c8] bg-[#fffaf3] p-5 shadow-[0_18px_48px_rgba(76,45,33,0.10)] sm:p-6">
-                    <div className="flex flex-col gap-1">
-                      <h2 className="text-xl font-bold tracking-tight text-[#3a2118]">Add expense</h2>
-                      <p className="text-sm text-[#7d6253]">Log a simple expense for this demo session.</p>
-                    </div>
-
-                    <form className="mt-5 grid gap-4" onSubmit={handleSubmit}>
-                      <label className="flex flex-col gap-2 text-sm font-semibold text-[#5d4035]">
-                        Amount
-                        <input
-                          className="min-w-0 rounded-2xl border border-[#ead9c8] bg-white/80 px-4 py-3 text-[#3a2118] outline-none transition placeholder:text-[#b79b89] focus:border-[#9a715f]"
-                          min="1"
-                          onChange={(event) => setAmount(event.target.value)}
-                          placeholder="Enter amount"
-                          required
-                          type="number"
-                          value={amount}
-                        />
-                      </label>
-
-                      <label className="flex flex-col gap-2 text-sm font-semibold text-[#5d4035]">
-                        Category
-                        <select
-                          className="min-w-0 rounded-2xl border border-[#ead9c8] bg-white/80 px-4 py-3 text-[#3a2118] outline-none transition focus:border-[#9a715f]"
-                          onChange={(event) => setCategory(event.target.value as MockExpense['category'])}
-                          value={category}
-                        >
-                          {expenseCategories.map((expenseCategory) => (
-                            <option key={expenseCategory} value={expenseCategory}>
-                              {expenseCategory}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-
-                      <label className="flex flex-col gap-2 text-sm font-semibold text-[#5d4035]">
-                        Note
-                        <input
-                          className="min-w-0 rounded-2xl border border-[#ead9c8] bg-white/80 px-4 py-3 text-[#3a2118] outline-none transition placeholder:text-[#b79b89] focus:border-[#9a715f]"
-                          onChange={(event) => setNote(event.target.value)}
-                          placeholder="e.g. Canteen lunch"
-                          required
-                          type="text"
-                          value={note}
-                        />
-                      </label>
-
-                      <label className="flex flex-col gap-2 text-sm font-semibold text-[#5d4035]">
-                        Date
-                        <input
-                          className="min-w-0 rounded-2xl border border-[#ead9c8] bg-white/80 px-4 py-3 text-[#3a2118] outline-none transition focus:border-[#9a715f]"
-                          onChange={(event) => setDate(event.target.value)}
-                          required
-                          type="date"
-                          value={date}
-                        />
-                      </label>
-
-                      <button
-                        className="rounded-2xl bg-[#4b2c22] px-5 py-3 text-sm font-bold text-[#fff7ed] shadow-[0_12px_28px_rgba(75,44,34,0.24)] transition hover:bg-[#5b382c]"
-                        type="submit"
-                      >
-                        Add expense
-                      </button>
-                      {formMessage ? <p className="text-sm text-[#7d6253]">{formMessage}</p> : null}
-                    </form>
-                  </section>
-                </div>
-              </div>
-            </>
+              </aside>
+            </div>
           )}
 
           {activeTab === 'patterns' && (
@@ -650,6 +628,29 @@ function SummaryTile({
       {action && <div className="mt-2">{action}</div>}
     </div>
   );
+}
+
+function PatternSummaryItem({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-[#efe2d4] bg-white/60 p-4">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#9b7968]">{label}</p>
+      <p className="mt-2 text-base font-semibold text-[#3a2118]">{value}</p>
+    </div>
+  );
+}
+
+function toTitleCase(value: string): string {
+  return value
+    .split(' ')
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 }
 
 function getExpenseTime(expense: MockExpense): number {
