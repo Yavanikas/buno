@@ -1,13 +1,14 @@
 ## Buno
 
 A Next.js budgeting web app to set a monthly budget, log expenses, 
-and analyze spending patterns over time without giving the actual figures
+and analyze spending patterns over time without giving the actual figures.
 
 ## Features
-- Set and edit monthly budget
+- Set and edit monthly budget (USD / INR toggle support)
 - Add and delete expenses
-- Overview tab: current month budget vs. spending
-- Patterns tab: monthly spending trends and category breakdown
+- Qualitative Spending Window: daily spending pace without numerical stress
+- AI Pattern Insights: observations on spending rhythm and categories
+- Editorial Ledger visual design system
 
 ## Setup
 
@@ -21,40 +22,29 @@ the standard Next.js `.next` folder.
 
 ## Tech Stack
 - Next.js (App Router)
-- React (useReducer for state management)
+- React & Tailwind CSS
 - TypeScript
 
-## AI Tooling Disclosure
+## AI Tooling & API Integration
 
-This project used AI coding assistants during development. Details below 
-for transparency:
+This project integrates AI features within the product and utilized AI tools during development:
 
-### GPT-5.6
-Used for architectural planning, state-shape design (reducer actions for 
-budget/expense CRUD), and code review of components like `BudgetEditor` 
-and `patternAnalysis.ts`. GPT-5.6 is OpenAI's flagship model family 
-(Sol/Terra/Luna variants), released July 2026, with strong coding and 
-agentic capabilities [web:16][web:18].
+### ChatGPT 5.6 (OpenAI API & Development)
+- **In-App API Integration**: ChatGPT 5.6 (via OpenAI API) powers Buno's backend endpoints (`/api/advice` and `/api/pattern-insight`). It generates friendly, qualitative budget guidance, greetings, and spending observations without ever showing numerical figures or currency amounts.
+- **Development & Architecture**: ChatGPT 5.6 was used as an AI pair programmer for architectural planning, prompt engineering, qualitative safety guardrails, state management, and multi-currency conversion logic (INR/USD).
 
 ### Codex
-Used for scaffolding boilerplate (component files, initial CRUD handlers) 
-via a `codex-pr-review` branch. Note: not all AI-proposed changes were 
-merged — some branch attempts were discarded after review found they 
-didn't modify actual source files (only dependency locks), so only 
-verified, tested diffs were merged into `main`.
-
-### Review Process
-All AI-generated code was manually reviewed, tested locally via 
-`npm run dev`, and verified with `git diff` before merging to `main`. 
-No AI output was merged without a human confirming the actual file diff.
+- **Code Scaffolding & Layout Refactoring**: Codex was used for scaffolding component boilerplate, CSS layout refactoring (via `codex/*` branches), and PR reviews.
+- **Review Process**: All AI-proposed changes and branch pull requests were manually code-reviewed, tested locally (`npm run dev` and `npm run test`), and verified before being merged into `main`.
 
 ## Project Structure
 
 | File | Purpose |
 |---|---|
-| `app/page.tsx` | Overview: budget summary, edit UI, expense list |
-| `app/patterns/page.tsx` | Patterns tab: insights and trend analysis |
-| `components/BudgetEditor.tsx` | Editable budget UI |
-| `components/ExpenseList.tsx` | Expense list with delete |
-| `lib/patternAnalysis.ts` | Category totals, month-over-month diffs |
-| `hooks/useBudgetState.ts` | useReducer state + actions |
+| `app/page.tsx` | Main dashboard: editorial ledger layout, budget setup, and expense logging |
+| `app/api/advice/route.ts` | Qualitative AI advice endpoint powered by ChatGPT 5.6 API |
+| `app/api/pattern-insight/route.ts` | AI pattern insight endpoint powered by ChatGPT 5.6 API |
+| `components/ProbabilityWindow.tsx` | Real-time qualitative spending pace and risk window |
+| `components/PatternInsight.tsx` | AI spending pattern observations component |
+| `lib/calc.ts` | Qualitative budget calculations and risk state evaluation |
+| `lib/patterns.ts` | Spending rhythm analysis and pattern metrics |
