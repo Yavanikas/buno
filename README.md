@@ -25,16 +25,17 @@ the standard Next.js `.next` folder.
 - React & Tailwind CSS
 - TypeScript
 
-## AI Tooling & API Integration
+## AI Tooling & Meaningful Usage Disclosure
 
-This project integrates AI features within the product and utilized AI tools during development:
+This project meaningfully incorporates both **GPT-5.6** and **Codex** across the live product experience and development lifecycle:
 
-### ChatGPT 5.6 (OpenAI API & Development)
-- **In-App API Integration**: ChatGPT 5.6 (via OpenAI API) powers Buno's backend endpoints (`/api/advice` and `/api/pattern-insight`). It generates friendly, qualitative budget guidance, greetings, and spending observations without ever showing numerical figures or currency amounts.
-- **Development & Architecture**: ChatGPT 5.6 was used as an AI pair programmer for architectural planning, prompt engineering, qualitative safety guardrails, state management, and multi-currency conversion logic (INR/USD).
+### 1. ChatGPT 5.6 (Core Runtime Engine & AI Architecture)
+- **Live In-App Integration**: GPT-5.6 powers Buno's core defining feature via backend API routes (`/api/advice` and `/api/pattern-insight`). Rather than decorative text, it acts as the primary runtime engine—dynamically synthesizing user spending rhythm into calm, qualitative daily guidance and pattern observations under strict zero-numerical system constraints.
+- **Architectural & Prompt Engineering**: GPT-5.6 was used during development to design the qualitative safety guardrails, regex verification filters, multi-currency conversion logic (USD/INR), and system prompt structure.
 
-### Codex
-- **Code Scaffolding & Layout Refactoring**: Codex was used for scaffolding component boilerplate, CSS layout refactoring (via `codex/*` branches), and PR reviews.
+### 2. Codex (Codebase Construction & Layout Refactoring)
+- **Core Code Scaffolding**: Codex authored the vast majority of the application codebase, including Next.js App Router scaffolding, component structures, and state management logic.
+- **Layout & Refactoring**: Codex was used extensively across feature branches (`codex/*`) to transform the layout into the *Editorial Ledger* grid system and perform PR code reviews.
 - **Review Process**: All AI-proposed changes and branch pull requests were manually code-reviewed, tested locally (`npm run dev` and `npm run test`), and verified before being merged into `main`.
 
 ## Project Structure
