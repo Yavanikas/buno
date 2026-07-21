@@ -365,7 +365,7 @@ function toSafeText(value: unknown, fallback: string): string {
 }
 
 function containsExactAmount(value: string): boolean {
-  return /₹|\brs\.?\b|\brupees?\b|\d/.test(value.toLowerCase());
+  return /[$₹]|\brs\.?\b|\brupees?\b|\busd\b|\bdollars?\b|\bcents?\b|\d/.test(value.toLowerCase());
 }
 
 function toStartOfDay(date: unknown): Date {

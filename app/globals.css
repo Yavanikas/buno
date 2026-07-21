@@ -1,13 +1,15 @@
 @import "tailwindcss";
 
+@theme {
+  --font-serif: var(--font-playfair), "Georgia", serif;
+  --font-sans: var(--font-inter), "Nunito", sans-serif;
+}
+
 :root {
-  background: #f8efe4;
+  background: #faf9f6;
   color: #3a2118;
 }
 
 body {
   margin: 0;
-  background:
-    radial-gradient(circle at top left, rgba(255, 250, 243, 0.95), rgba(248, 239, 228, 0.9) 42%, rgba(241, 224, 207, 0.72)),
-    #f8efe4;
 }

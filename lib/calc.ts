@@ -18,8 +18,8 @@ export type BudgetStateInput = {
 
 export type BudgetState = {
   riskLabel: RiskLabel;
-  zoneLabel: 'Comfortable zone' | 'Watchful zone' | 'Fragile zone';
-  paceLabel: 'Flexible today' | 'Pace is tightening' | 'Very limited flexibility';
+  zoneLabel: "You're pacing yourself well." | 'You are keeping a steady pace.' | 'Take it easy on spending.';
+  paceLabel: 'You have some flexibility.' | 'Things are getting tighter.' | 'Flexibility is limited.';
 };
 
 
@@ -161,23 +161,23 @@ function getQualitativeBudgetState(riskLabel: RiskLabel): BudgetState {
   if (riskLabel === 'safe') {
     return {
       riskLabel,
-      zoneLabel: 'Comfortable zone',
-      paceLabel: 'Flexible today',
+      zoneLabel: "You're pacing yourself well.",
+      paceLabel: 'You have some flexibility.',
     };
   }
 
   if (riskLabel === 'watchful') {
     return {
       riskLabel,
-      zoneLabel: 'Watchful zone',
-      paceLabel: 'Pace is tightening',
+      zoneLabel: 'You are keeping a steady pace.',
+      paceLabel: 'Things are getting tighter.',
     };
   }
 
   return {
     riskLabel,
-    zoneLabel: 'Fragile zone',
-    paceLabel: 'Very limited flexibility',
+    zoneLabel: 'Take it easy on spending.',
+    paceLabel: 'Flexibility is limited.',
   };
 }
 

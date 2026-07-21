@@ -1,6 +1,6 @@
 'use client';
 
-import { type FormEvent, useMemo, useState } from 'react';
+import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import PatternInsight from '../components/PatternInsight';
 import ProbabilityWindow from '../components/ProbabilityWindow';
 import { mockExpenses, type MockExpense } from '../data/mockExpenses';
@@ -61,6 +61,7 @@ function getTodayInputValue() {
 }
 
 export default function Home() {
+  const [currency, setCurrency] = useState<'INR' | 'USD'>('INR');
   const [monthlyBudget, setMonthlyBudget] = useState(initialMonthlyBudget);
   const [budgetInput, setBudgetInput] = useState(String(initialMonthlyBudget));
   const [isEditingBudget, setIsEditingBudget] = useState(false);
@@ -156,23 +157,37 @@ export default function Home() {
     setFormMessage('Expense deleted for this session.');
   }
 
+  function handleCurrencyToggle() {
+    if (currency === 'INR') {
+      setCurrency('USD');
+      const newBudget = Math.max(1, Math.round(monthlyBudget / 80));
+      setMonthlyBudget(newBudget);
+      setBudgetInput(String(newBudget));
+      setExpenses((currentExpenses) =>
+        currentExpenses.map((expense) => ({ ...expense, amount: Math.max(1, Math.round(expense.amount / 80)) }))
+      );
+    } else {
+      setCurrency('INR');
+      const newBudget = Math.round(monthlyBudget * 80);
+      setMonthlyBudget(newBudget);
+      setBudgetInput(String(newBudget));
+      setExpenses((currentExpenses) =>
+        currentExpenses.map((expense) => ({ ...expense, amount: Math.round(expense.amount * 80) }))
+      );
+    }
+  }
+
   return (
-    <main className="min-h-screen bg-[#f8efe4] text-[#3a2118]">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-5 sm:px-6 lg:flex-col lg:gap-8 lg:px-8 lg:py-8">
-        <div className="min-w-0 flex-1 flex flex-col gap-8">
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
-            <div className="flex min-w-0 flex-col gap-6 lg:col-span-2 lg:gap-8">
-              <header className="flex flex-col gap-3 rounded-[2rem] border border-[#ead9c8] bg-[#fffaf3]/85 p-5 shadow-[0_20px_60px_rgba(76,45,33,0.10)] sm:p-7">
-                <div className="flex items-center gap-4">
-                  <BunnyLogo />
-                  <h1 className="text-4xl font-black tracking-wide text-[#8B4513] sm:text-5xl" style={{ fontFamily: '"Nunito", "Arial Rounded MT Bold", "Varela Round", system-ui, sans-serif', letterSpacing: '0.06em' }}>
-                    BUNO
-                  </h1>
-                </div>
-                <p className="max-w-2xl text-sm leading-6 text-[#735747] sm:text-base">
-                    A calm student budget assistant that tracks your setup, reads your spending pace, and keeps guidance qualitative.
-                  </p>
-                </header>
+    <main className="min-h-screen text-[#3a2118]">
+      <div className="mx-auto flex w-full max-w-7xl flex-col shadow-[0_30px_80px_rgba(76,45,33,0.06)]">
+        <div className="min-w-0 flex-1 flex flex-col">
+          <div className="grid grid-cols-1 lg:grid-cols-3">
+            <div className="flex min-w-0 flex-col gap-6 lg:col-span-2 lg:gap-8 bg-[#faf9f6] px-5 py-6 sm:px-8 lg:px-12 lg:py-10">
+              <HeroHeader
+                riskLabel={budgetState.riskLabel}
+                zoneLabel={budgetState.zoneLabel}
+                paceLabel={budgetState.paceLabel}
+              />
 
                 <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(260px,0.75fr)]">
                   <div className="flex min-w-0 flex-col gap-6">
@@ -182,28 +197,28 @@ export default function Home() {
                       paceLabel={budgetState.paceLabel}
                     />
 
-                    <section className="rounded-[1.75rem] border border-[#ead9c8] bg-[#fffaf3] p-5 shadow-[0_18px_48px_rgba(76,45,33,0.10)] sm:p-6">
+                    <section className="border-b-2 border-dotted border-[#c8bba9] pb-8 pt-4">
                       <div className="mb-5 flex flex-col gap-1">
-                        <h2 className="text-2xl font-bold tracking-tight text-[#3a2118]">Monthly Budget</h2>
-                        <p className="text-sm text-[#7d6253]">Your core budget setup for this month.</p>
+                        <h2 className="font-serif text-2xl font-bold tracking-tight text-[#3a2118]">Your core budget</h2>
+                        <p className="text-sm text-[#7d6253]">Your foundation for this month's spending.</p>
                       </div>
 
-                      <div className="grid gap-3 sm:grid-cols-3">
+                      <div className="grid gap-6 sm:grid-cols-3">
                         {isEditingBudget ? (
-                          <form onSubmit={handleBudgetSubmit} className="min-w-0 rounded-3xl border border-[#ead9c8] bg-white/70 p-4 flex flex-col justify-between">
+                          <form onSubmit={handleBudgetSubmit} className="min-w-0 flex flex-col justify-between">
                             <div>
-                              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#a48673]">Monthly budget</p>
+                              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#a48673]">Monthly budget</p>
                               <input
                                 type="number"
                                 value={budgetInput}
                                 onChange={(e) => setBudgetInput(e.target.value)}
-                                className="mt-2 w-full rounded-xl border border-[#ead9c8] bg-white px-2 py-1 text-sm text-[#3a2118] outline-none"
+                                className="mt-2 w-full border-b border-[#ead9c8] bg-transparent px-2 py-1 text-sm text-[#3a2118] outline-none focus:border-[#8a6557]"
                                 min="1"
                                 required
                               />
                             </div>
-                            <div className="flex gap-2 mt-2">
-                              <button type="submit" className="rounded-lg bg-[#4b2c22] px-3 py-1 text-xs font-bold text-[#fff7ed]">Save</button>
+                            <div className="flex gap-2 mt-3">
+                              <button type="submit" className="rounded bg-[#4b2c22] px-4 py-1.5 text-xs font-bold text-[#fff7ed] shadow-sm transition hover:bg-[#5b382c]">Save</button>
                               <button
                                 type="button"
                                 onClick={() => {
@@ -211,7 +226,7 @@ export default function Home() {
                                   setBudgetInput(String(monthlyBudget));
                                   setBudgetMessage('');
                                 }}
-                                className="rounded-lg bg-[#ead9c8] px-3 py-1 text-xs font-semibold text-[#6e4d3f]"
+                                className="rounded bg-[#ead9c8] px-4 py-1.5 text-xs font-semibold text-[#6e4d3f] transition hover:bg-[#dfcdbb]"
                               >
                                 Cancel
                               </button>
@@ -221,7 +236,7 @@ export default function Home() {
                         ) : (
                           <SummaryTile
                             label="Monthly budget"
-                            value={`₹${monthlyBudget}`}
+                            value={formatCurrency(monthlyBudget, currency)}
                             action={
                               <button
                                 onClick={() => {
@@ -241,13 +256,13 @@ export default function Home() {
                     </section>
                   </div>
 
-                  <section className="flex min-h-[26rem] flex-col justify-between rounded-[1.75rem] border border-[#ead9c8] bg-[#fffaf3] p-5 shadow-[0_18px_48px_rgba(76,45,33,0.10)] sm:p-6">
+                  <section className="flex flex-col justify-between border-b-2 border-dotted border-[#c8bba9] pb-8 pt-4 lg:min-h-[26rem]">
                     <div className="flex flex-col gap-1">
-                      <h2 className="text-2xl font-bold tracking-tight text-[#3a2118]">Activity Rhythm</h2>
+                      <h2 className="font-serif text-2xl font-bold tracking-tight text-[#3a2118]">Your spending rhythm</h2>
                       <p className="text-sm text-[#7d6253]">{monthlyPatternSummary.currentMonthActivitySummary}</p>
                     </div>
 
-                    <div className="mt-6 grid gap-3">
+                    <div className="mt-6 grid gap-6">
                       <SummaryTile label="This month" value={`${monthlyPatternSummary.totalExpensesThisMonth} logs`} />
                       <SummaryTile label="Top category" value={toTitleCase(monthlyPatternSummary.mostFrequentCategory)} />
                       <SummaryTile
@@ -258,102 +273,106 @@ export default function Home() {
                   </section>
                 </div>
 
-                <section className="rounded-[1.75rem] border border-[#ead9c8] bg-[#fffaf3] p-5 shadow-[0_18px_48px_rgba(76,45,33,0.10)] sm:p-6">
+                <section className="border-b-2 border-dotted border-[#c8bba9] pb-8 pt-4">
                   <div className="flex flex-col gap-1">
-                    <h2 className="text-xl font-bold tracking-tight text-[#3a2118]">Add expense</h2>
-                    <p className="text-sm text-[#7d6253]">Log a simple expense for this demo session.</p>
+                    <h2 className="font-serif text-xl font-bold tracking-tight text-[#3a2118]">Log a quick expense</h2>
+                    <p className="text-sm text-[#7d6253]">Keep track of what you just spent.</p>
                   </div>
 
-                  <form className="mt-5 grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
-                    <label className="flex flex-col gap-2 text-sm font-semibold text-[#5d4035]">
+                  <form className="mt-5 grid gap-6 md:grid-cols-2" onSubmit={handleSubmit}>
+                    <label className="flex flex-col gap-1 text-sm font-semibold text-[#5d4035]">
                       Amount
-                      <input className="min-w-0 rounded-2xl border border-[#ead9c8] bg-white/80 px-4 py-3 text-[#3a2118] outline-none transition placeholder:text-[#b79b89] focus:border-[#9a715f]" min="1" onChange={(event) => setAmount(event.target.value)} placeholder="Enter amount" required type="number" value={amount} />
+                      <input className="min-w-0 border-b border-[#ead9c8] bg-transparent px-2 py-2 text-[#3a2118] outline-none transition placeholder:text-[#b79b89] focus:border-[#8a6557]" min="1" onChange={(event) => setAmount(event.target.value)} placeholder="Enter amount" required type="number" value={amount} />
                     </label>
-                    <label className="flex flex-col gap-2 text-sm font-semibold text-[#5d4035]">
+                    <label className="flex flex-col gap-1 text-sm font-semibold text-[#5d4035]">
                       Category
-                      <select className="min-w-0 rounded-2xl border border-[#ead9c8] bg-white/80 px-4 py-3 text-[#3a2118] outline-none transition focus:border-[#9a715f]" onChange={(event) => setCategory(event.target.value as MockExpense['category'])} value={category}>
+                      <select className="min-w-0 border-b border-[#ead9c8] bg-transparent px-2 py-2 text-[#3a2118] outline-none transition focus:border-[#8a6557]" onChange={(event) => setCategory(event.target.value as MockExpense['category'])} value={category}>
                         {expenseCategories.map((expenseCategory) => <option key={expenseCategory} value={expenseCategory}>{expenseCategory}</option>)}
                       </select>
                     </label>
-                    <label className="flex flex-col gap-2 text-sm font-semibold text-[#5d4035] md:col-span-2">
+                    <label className="flex flex-col gap-1 text-sm font-semibold text-[#5d4035] md:col-span-2">
                       Note
-                      <input className="min-w-0 rounded-2xl border border-[#ead9c8] bg-white/80 px-4 py-3 text-[#3a2118] outline-none transition placeholder:text-[#b79b89] focus:border-[#9a715f]" onChange={(event) => setNote(event.target.value)} placeholder="e.g. Canteen lunch" required type="text" value={note} />
+                      <input className="min-w-0 border-b border-[#ead9c8] bg-transparent px-2 py-2 text-[#3a2118] outline-none transition placeholder:text-[#b79b89] focus:border-[#8a6557]" onChange={(event) => setNote(event.target.value)} placeholder="e.g. Canteen lunch" required type="text" value={note} />
                     </label>
-                    <label className="flex flex-col gap-2 text-sm font-semibold text-[#5d4035]">
+                    <label className="flex flex-col gap-1 text-sm font-semibold text-[#5d4035]">
                       Date
-                      <input className="min-w-0 rounded-2xl border border-[#ead9c8] bg-white/80 px-4 py-3 text-[#3a2118] outline-none transition focus:border-[#9a715f]" onChange={(event) => setDate(event.target.value)} required type="date" value={date} />
+                      <input className="min-w-0 border-b border-[#ead9c8] bg-transparent px-2 py-2 text-[#3a2118] outline-none transition focus:border-[#8a6557]" onChange={(event) => setDate(event.target.value)} required type="date" value={date} />
                     </label>
                     <div className="flex flex-col justify-end gap-2">
-                      <button className="rounded-2xl bg-[#4b2c22] px-5 py-3 text-sm font-bold text-[#fff7ed] shadow-[0_12px_28px_rgba(75,44,34,0.24)] transition hover:bg-[#5b382c]" type="submit">Add expense</button>
+                      <button className="rounded bg-[#4b2c22] px-5 py-2 text-sm font-bold text-[#fff7ed] shadow-sm transition hover:bg-[#5b382c]" type="submit">Log expense</button>
                       {formMessage ? <p className="text-sm text-[#7d6253]">{formMessage}</p> : null}
                     </div>
                   </form>
                 </section>
               </div>
 
-              <aside className="flex min-w-0 flex-col gap-6 rounded-[2rem] border border-[#f0d87b] bg-[#fef9c3] p-5 shadow-[0_24px_65px_rgba(154,116,35,0.18)] sm:p-6 lg:col-span-1 lg:min-h-[calc(100vh-4rem)]">
+              <aside className="flex min-w-0 flex-col gap-6 lg:col-span-1 lg:min-h-[calc(100vh-4rem)] bg-[#eee8e0] px-5 py-6 sm:px-8 lg:px-12 lg:py-10">
                 <PatternInsight riskLabel={budgetState.riskLabel} recentExpenses={expenses} daysRemaining={daysRemaining} />
 
-                <section className="min-w-0 rounded-[1.75rem] border border-[#eadf9a] bg-white/55 p-5 shadow-[0_14px_32px_rgba(154,116,35,0.10)]">
-                  <div className="flex flex-col gap-1">
-                    <h2 className="text-2xl font-bold tracking-tight text-[#3a2118]">Recent Activity</h2>
+                <section className="min-w-0 pt-4">
+                  <div className="flex flex-col gap-1 mb-6">
+                    <h2 className="font-serif text-2xl font-bold tracking-tight text-[#3a2118]">Recent Activity</h2>
                     <p className="text-sm text-[#7d6253]">Your latest logged expenses for this demo session.</p>
                   </div>
 
                   {recentExpenses.length > 0 ? (
-                    <div className="mt-5 flex flex-col gap-3">
+                    <div className="flex flex-col gap-3">
                       {recentExpenses.slice(0, 6).map((expense) => (
-                        <div className="grid min-w-0 grid-cols-[3.5rem_minmax(0,1fr)] gap-4 rounded-2xl border border-[#efe2d4] bg-white/80 p-3 shadow-[0_12px_30px_rgba(76,45,33,0.08)]" key={expense.id}>
-                          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#8a6557] text-lg font-semibold uppercase text-[#fff7ed] shadow-inner">{getCategoryInitial(expense.category)}</div>
-                          <div className="min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span className="text-xs font-medium uppercase tracking-[0.18em] text-[#b09380]">{formatExpenseDate(expense.date)}</span>
-                              <span className="rounded-full bg-[#f3e6d8] px-2.5 py-1 text-xs font-medium capitalize text-[#6e4d3f]">{expense.category}</span>
+                        <div className="flex min-w-0 flex-col gap-1 border-b border-dashed border-[#dcd1c4] pb-4 pt-1 last:border-0 hover:bg-[#e7dfd4] transition px-2 -mx-2 rounded-lg" key={expense.id}>
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="min-w-0 flex-1 flex gap-3">
+                              <div className="mt-1 text-[#8B4513] opacity-80">{getCategoryIcon(expense.category)}</div>
+                              <div>
+                                <p className="break-words text-base font-semibold text-[#3a2118]">{expense.note}</p>
+                                <div className="mt-1 flex flex-wrap items-center gap-2">
+                                  <span className="text-xs font-medium uppercase tracking-[0.18em] text-[#a48673]">{formatExpenseDate(expense.date)}</span>
+                                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#8B4513]">● {expense.category}</span>
+                                </div>
+                              </div>
                             </div>
-                            <p className="mt-1 break-words text-base font-semibold text-[#3a2118]">{expense.note}</p>
-                            <div className="mt-2 flex items-center justify-between gap-3">
-                              <p className="text-sm font-semibold text-[#7d6253]">{getExpenseSizeLabel(expense.amount)}</p>
-                              <button onClick={() => handleDeleteExpense(expense.id)} className="rounded-lg px-2 py-1 text-xs font-medium text-[#c49a84] transition hover:bg-[#f3e6d8] hover:text-[#4b2c22]" title="Delete expense">Delete</button>
+                            <div className="flex flex-col items-end gap-1">
+                              <p className="font-serif text-lg font-bold text-[#3a2118]">{formatCurrency(expense.amount, currency)}</p>
+                              <button onClick={() => handleDeleteExpense(expense.id)} className="text-[10px] font-bold uppercase tracking-wider text-[#b09380] opacity-0 transition-opacity hover:text-[#4b2c22] hover:underline group-hover:opacity-100 mt-1" title="Delete expense" style={{ opacity: 1 /* fallback if group not used, let's keep it visible but muted */ }}>Delete</button>
                             </div>
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="mt-5 rounded-2xl border border-[#ead9c8] bg-white/70 p-4 text-sm text-[#7d6253]">No expenses yet. Add your first expense when you are ready.</p>
+                    <p className="mt-5 border-t border-[#ead9c8] pt-4 text-sm text-[#7d6253]">No expenses yet. Add your first expense when you are ready.</p>
                   )}
                 </section>
               </aside>
             </div>
 
-            <section className="rounded-[1.75rem] border border-[#ead9c8] bg-[#fffaf3] p-5 shadow-[0_18px_48px_rgba(76,45,33,0.10)] sm:p-6 flex flex-col gap-6">
+            <section className="border-t-2 border-dotted border-[#c8bba9] pb-8 pt-8 flex flex-col gap-6 bg-[#faf9f6] px-5 sm:px-8 lg:px-12">
               <div>
-                <h2 className="text-2xl font-bold tracking-tight text-[#3a2118]">Settings</h2>
+                <h2 className="font-serif text-2xl font-bold tracking-tight text-[#3a2118]">Settings</h2>
                 <p className="text-sm text-[#7d6253]">Manage your demo session configurations.</p>
               </div>
 
-              <div className="grid gap-6 md:grid-cols-2">
-                <div className="rounded-2xl bg-white/60 p-4 border border-[#efe2d4] flex flex-col gap-3">
-                  <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-[#9b7968]">Monthly Budget</h3>
+              <div className="grid gap-8 md:grid-cols-2">
+                <div className="flex flex-col gap-3">
+                  <h3 className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9b7968]">Monthly Budget</h3>
                   <p className="text-sm text-[#7d6253]">
                     Update your total spending budget for this monthly cycle. Recalculates risk indicators and daily allowance automatically.
                   </p>
                   
                   <form onSubmit={handleBudgetSubmit} className="flex flex-col gap-3 mt-2">
                     <label className="flex flex-col gap-1 text-sm font-semibold text-[#5d4035]">
-                      Budget Value (₹)
+                      Budget Value ({currency === 'USD' ? '$' : '₹'})
                       <input
                         type="number"
                         value={budgetInput}
                         onChange={(e) => setBudgetInput(e.target.value)}
-                        className="rounded-xl border border-[#ead9c8] bg-white px-3 py-2 text-sm text-[#3a2118] outline-none"
+                        className="border-b border-[#ead9c8] bg-transparent px-2 py-2 text-sm text-[#3a2118] outline-none transition focus:border-[#8a6557]"
                         min="1"
                         required
                       />
                     </label>
                     <button
                       type="submit"
-                      className="w-fit rounded-xl bg-[#4b2c22] px-4 py-2 text-sm font-bold text-[#fff7ed] shadow transition hover:bg-[#5b382c]"
+                      className="w-fit rounded bg-[#4b2c22] px-4 py-2 text-sm font-bold text-[#fff7ed] shadow-sm transition hover:bg-[#5b382c]"
                     >
                       Save Budget
                     </button>
@@ -361,8 +380,24 @@ export default function Home() {
                   </form>
                 </div>
 
-                <div className="rounded-2xl bg-white/60 p-4 border border-[#efe2d4] flex flex-col gap-3">
-                  <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-[#9b7968]">Session Data</h3>
+                <div className="flex flex-col gap-3">
+                  <h3 className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9b7968]">Currency Settings</h3>
+                  <p className="text-sm text-[#7d6253]">
+                    Switch between Indian Rupee (₹) and US Dollar ($). The amounts will be automatically converted (Mock Rate 1 USD = 80 INR).
+                  </p>
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    <button
+                      type="button"
+                      onClick={handleCurrencyToggle}
+                      className="rounded bg-[#ead9c8] px-4 py-2 text-sm font-semibold text-[#6e4d3f] hover:bg-[#dfcdbb] transition"
+                    >
+                      Switch to {currency === 'INR' ? 'USD ($)' : 'INR (₹)'}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  <h3 className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9b7968]">Session Data</h3>
                   <p className="text-sm text-[#7d6253]">
                     Reset the mock expenses back to the default dataset or clear everything.
                   </p>
@@ -376,7 +411,7 @@ export default function Home() {
                         })));
                         setFormMessage('Expenses reset to mock defaults.');
                       }}
-                      className="rounded-xl bg-[#ead9c8] px-4 py-2 text-sm font-semibold text-[#6e4d3f] hover:bg-[#dfcdbb] transition"
+                      className="rounded bg-[#ead9c8] px-4 py-2 text-sm font-semibold text-[#6e4d3f] hover:bg-[#dfcdbb] transition"
                     >
                       Reset to defaults
                     </button>
@@ -386,7 +421,7 @@ export default function Home() {
                         setExpenses([]);
                         setFormMessage('All expenses cleared.');
                       }}
-                      className="rounded-xl bg-red-50 border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 transition"
+                      className="rounded border border-red-200 bg-transparent px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 transition"
                     >
                       Clear all expenses
                     </button>
@@ -400,6 +435,70 @@ export default function Home() {
   );
 }
 
+
+function HeroHeader({ riskLabel, zoneLabel, paceLabel }: { riskLabel: string; zoneLabel?: string; paceLabel?: string }) {
+  const [greetingData, setGreetingData] = useState({
+    paceSummary: "You're spending slower than usual this week.",
+    monthOutlook: "At this pace, the rest of the month looks comfortable.",
+    todaySuggestion: "Skip one unnecessary food delivery and you'll keep plenty of flexibility.",
+  });
+
+  const greetingTime = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadHeaderAdvice() {
+      try {
+        const response = await fetch('/api/advice', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ riskLabel, zoneLabel, paceLabel }),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (isMounted && data.paceSummary) {
+            setGreetingData({
+              paceSummary: data.paceSummary,
+              monthOutlook: data.monthOutlook || "At this pace, the rest of the month looks comfortable.",
+              todaySuggestion: data.todaySuggestion || "Keep an eye on your pace today.",
+            });
+          }
+        }
+      } catch {
+        // preserve defaults
+      }
+    }
+    loadHeaderAdvice();
+    return () => { isMounted = false; };
+  }, [riskLabel, zoneLabel, paceLabel]);
+
+  return (
+    <header className="flex flex-col gap-4 border-b-2 border-dotted border-[#c8bba9] pb-8 pt-4">
+      <div className="flex items-center gap-4">
+        <BunnyLogo />
+        <h1 className="font-serif text-4xl font-black tracking-wide text-[#8B4513] sm:text-5xl" style={{ letterSpacing: '0.04em' }}>
+          BUNO
+        </h1>
+      </div>
+      <div className="flex flex-col gap-2 max-w-2xl text-sm leading-relaxed text-[#5d4035] sm:text-base mt-2">
+        <h2 className="font-serif text-2xl font-bold tracking-wide text-[#3a2118] sm:text-3xl mb-1">
+          {greetingTime}, User.
+        </h2>
+        <p className="font-medium">{greetingData.paceSummary}</p>
+        <p className="text-[#735747]">{greetingData.monthOutlook}</p>
+        <div className="mt-3 pt-3 border-t border-dashed border-[#dcd1c4]">
+          <span className="font-bold uppercase tracking-wider block text-[10px] text-[#a48673] mb-1">Today&apos;s suggestion</span>
+          <p className="italic font-serif text-[#4b2c22] text-base sm:text-lg">&ldquo;{greetingData.todaySuggestion}&rdquo;</p>
+        </div>
+      </div>
+    </header>
+  );
+}
 
 function BunnyLogo() {
   return (
@@ -454,12 +553,12 @@ function SummaryTile({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="min-w-0 rounded-3xl border border-[#ead9c8] bg-white/70 p-4 flex flex-col justify-between">
+    <div className="min-w-0 flex flex-col justify-between border-l-2 border-dotted border-[#c8bba9] pl-4 py-1">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#a48673]">{label}</p>
-        <p className="mt-2 break-words text-lg font-bold text-[#3a2118]">{value}</p>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#a48673]">{label}</p>
+        <p className="font-serif mt-1 break-words text-2xl italic text-[#3a2118]">{value}</p>
       </div>
-      {action && <div className="mt-2">{action}</div>}
+      {action && <div className="mt-3">{action}</div>}
     </div>
   );
 }
@@ -472,9 +571,9 @@ function PatternSummaryItem({
   value: string;
 }) {
   return (
-    <div className="rounded-2xl border border-[#efe2d4] bg-white/60 p-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#9b7968]">{label}</p>
-      <p className="mt-2 text-base font-semibold text-[#3a2118]">{value}</p>
+    <div className="flex flex-col border-l border-[#ead9c8] pl-4">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9b7968]">{label}</p>
+      <p className="mt-1 text-lg font-medium text-[#3a2118]">{value}</p>
     </div>
   );
 }
@@ -522,10 +621,76 @@ function getExpenseSizeLabel(amount: number): string {
   return 'Larger spend';
 }
 
-function getCategoryInitial(category: string): string {
-  const trimmedCategory = category.trim();
-
-  return trimmedCategory ? trimmedCategory.charAt(0) : '•';
+function getCategoryIcon(category: string) {
+  const c = category.toLowerCase();
+  switch (c) {
+    case 'food':
+      return (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="m18 8-4-4-6 6 4 4" />
+          <path d="m13 13 6 6-2 2-6-6" />
+          <path d="M5 9v11" />
+          <path d="M9 5v15" />
+          <path d="M4.5 12h5" />
+        </svg>
+      );
+    case 'groceries':
+      return (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+          <path d="M3 6h18" />
+          <path d="M16 10a4 4 0 0 1-8 0" />
+        </svg>
+      );
+    case 'transport':
+      return (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" />
+          <circle cx="7" cy="17" r="2" />
+          <path d="M9 17h6" />
+          <circle cx="17" cy="17" r="2" />
+        </svg>
+      );
+    case 'personal care':
+      return (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M10 2v7.31" />
+          <path d="M14 9.3V1.99" />
+          <path d="M8.5 2h7" />
+          <path d="M14 9.3a6.5 6.5 0 1 1-4 0" />
+          <path d="M5.52 16h12.96" />
+        </svg>
+      );
+    case 'social':
+      return (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+          <polyline points="14 2 14 8 20 8" />
+          <path d="M10.42 12.61a2.1 2.1 0 1 1 2.97 2.97L7.95 21 4 22l.99-3.95 5.43-5.44Z" />
+        </svg>
+      );
+    case 'academics':
+      return (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+        </svg>
+      );
+    case 'subscriptions':
+      return (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect width="20" height="14" x="2" y="5" rx="2" />
+          <line x1="2" x2="22" y1="10" y2="10" />
+        </svg>
+      );
+    default:
+      return (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+      );
+  }
 }
 
 function getSpendingHealthScore(summary: MonthlyPatternSummary) {
@@ -566,9 +731,19 @@ function getActiveDays(expenses: { date: string | Date }[]): Set<number> {
 
 function MetricCard({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
-    <div className={`rounded-2xl border border-[#ead9c8] bg-[#fffaf3] p-4 shadow-[0_12px_30px_rgba(76,45,33,0.06)] flex flex-col justify-between ${accent ? 'ring-1 ring-[#8B4513]/20' : ''}`}>
+    <div className={`flex flex-col justify-between border-l-2 border-dotted border-[#c8bba9] pl-4 ${accent ? 'border-l-[#8B4513]' : ''}`}>
       <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#a48673]">{label}</span>
-      <span className="mt-2 text-2xl font-black text-[#3a2118]">{value}</span>
+      <span className="font-serif mt-1 text-2xl italic text-[#3a2118]">{value}</span>
     </div>
   );
+}
+
+function formatCurrency(amount: number, currency: 'INR' | 'USD') {
+  const locale = currency === 'INR' ? 'en-IN' : 'en-US';
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
 }

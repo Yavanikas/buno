@@ -24,7 +24,7 @@ type PatternInsightState = {
 
 const FALLBACK_PATTERN_INSIGHT: PatternInsightState = {
   patternTag: 'Recent activity',
-  insight: 'Recent spending activity is worth watching over the next few days.',
+  insight: 'Nothing unusual stands out in your recent spending.',
   confidence: 'low',
 };
 
@@ -92,11 +92,11 @@ export default function PatternInsight({
   const confidenceLevel = patternInsight.confidence === 'high' ? 3 : patternInsight.confidence === 'medium' ? 2 : 1;
 
   return (
-    <section className="rounded-[1.75rem] border border-[#ead9c8] bg-[#fffaf3] px-5 py-4 shadow-[0_18px_48px_rgba(76,45,33,0.10)] sm:px-6">
+    <section className="border-b-2 border-dotted border-[#c8bba9] pb-6 mb-6">
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold tracking-tight text-[#3a2118]">Pattern Insight</h2>
-          <span className="rounded-full border border-[#ead9c8] bg-[#f3e6d8] px-3 py-1 text-xs font-semibold capitalize text-[#6e4d3f]">
+          <h2 className="font-serif text-xl font-bold tracking-tight text-[#3a2118]">Buno noticed something...</h2>
+          <span className="text-sm font-semibold capitalize text-[#8a6557]">
             {patternInsight.patternTag}
           </span>
         </div>
@@ -160,16 +160,16 @@ function isBrokenText(value: string): boolean {
 }
 
 function containsExactAmount(value: string): boolean {
-  return /₹|\brs\.?\b|\brupees?\b|\d/.test(value.toLowerCase());
+  return /[$₹]|\brs\.?\b|\brupees?\b|\busd\b|\bdollars?\b|\bcents?\b|\d/.test(value.toLowerCase());
 }
 
 function PatternInsightSkeleton() {
   return (
-    <section className="rounded-[1.75rem] border border-[#ead9c8] bg-[#fffaf3] px-5 py-4 shadow-[0_18px_48px_rgba(76,45,33,0.10)] sm:px-6" aria-label="Loading pattern insight">
+    <section className="border-b-2 border-dotted border-[#c8bba9] pb-6 mb-6" aria-label="Loading pattern insight">
       <div className="flex animate-pulse flex-col gap-3">
         <div className="flex items-center justify-between">
           <div className="h-5 w-32 rounded bg-[#ead9c8]" />
-          <div className="h-6 w-28 rounded-full bg-[#ead9c8]" />
+          <div className="h-4 w-28 rounded bg-[#ead9c8]" />
         </div>
         <div className="h-5 w-3/4 rounded bg-[#ead9c8]" />
         <div className="flex items-center justify-between">

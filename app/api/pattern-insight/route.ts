@@ -3,10 +3,11 @@ import { getRecentPatternSummary, type PatternExpense, type PatternSummary } fro
 
 const OPENAI_RESPONSES_URL = 'https://api.openai.com/v1/responses';
 const OPENAI_TIMEOUT_MS = 10_000;
+const GROQ_TIMEOUT_MS = 10_000;
 
 const SYSTEM_PROMPT = `You are interpreting short-term spending patterns.
 You are not allowed to invent facts not supported by the supplied data.
-You are not allowed to output exact rupee amounts, exact remaining balance, or exact spending ranges.
+You are not allowed to output exact currency amounts, exact remaining balance, or exact spending ranges.
 You are not allowed to assign the official risk state.
 You must return only JSON with patternTag, insight, and confidence.
 The insight must be one sentence only.
@@ -69,61 +70,108 @@ export async function POST(request: Request) {
     return fallbackResponse();
   }
 
-  const apiKey = process.env.OPENAI_API_KEY;
+  let rawInsightOutput: string | undefined;
 
-  if (!apiKey) {
-    logDevelopmentError('Missing OPENAI_API_KEY for pattern insight');
-    return fallbackResponse();
-  }
+  const openAiApiKey = process.env.OPENAI_API_KEY;
+  if (openAiApiKey) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), OPENAI_TIMEOUT_MS);
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), OPENAI_TIMEOUT_MS);
-
-  try {
-    const response = await fetch(OPENAI_RESPONSES_URL, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      signal: controller.signal,
-      body: JSON.stringify({
-        model: 'gpt-5.6',
-        instructions: SYSTEM_PROMPT,
-        input: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'input_text',
-                text: JSON.stringify(buildModelContext(summary)),
-              },
-            ],
-          },
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      const errorBody = await response.text();
-      logDevelopmentError('OpenAI pattern insight API error', {
-        status: response.status,
-        body: errorBody,
+    try {
+      const response = await fetch(OPENAI_RESPONSES_URL, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${openAiApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        signal: controller.signal,
+        body: JSON.stringify({
+          model: 'gpt-5.6',
+          instructions: SYSTEM_PROMPT,
+          input: [
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'input_text',
+                  text: JSON.stringify(buildModelContext(summary)),
+                },
+              ],
+            },
+          ],
+        }),
       });
 
-      return fallbackResponse();
+      if (response.ok) {
+        const data = (await response.json()) as OpenAIResponse;
+        rawInsightOutput = data.output_text;
+      } else {
+        const errorBody = await response.text();
+        logDevelopmentError('OpenAI pattern insight API error', {
+          status: response.status,
+          body: errorBody,
+        });
+      }
+    } catch (error) {
+      logDevelopmentError('OpenAI pattern insight request failed', error);
+    } finally {
+      clearTimeout(timeout);
     }
-
-    const data = (await response.json()) as OpenAIResponse;
-    const insight = toSafePatternInsight(data.output_text);
-
-    return Response.json(insight);
-  } catch (error) {
-    logDevelopmentError('OpenAI pattern insight request failed', error);
-    return fallbackResponse();
-  } finally {
-    clearTimeout(timeout);
+  } else {
+    logDevelopmentError('Missing OPENAI_API_KEY for pattern insight');
   }
+
+  // Fallback to Groq API if OpenAI fails or returned empty
+  if (!rawInsightOutput) {
+    const groqApiKey = process.env.GROQ_API_KEY;
+    if (groqApiKey) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), GROQ_TIMEOUT_MS);
+
+      try {
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${groqApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          signal: controller.signal,
+          body: JSON.stringify({
+            model: 'llama3-8b-8192', // Replace with desired Groq model
+            messages: [
+              { role: 'system', content: SYSTEM_PROMPT },
+              { role: 'user', content: JSON.stringify(buildModelContext(summary)) },
+            ],
+            response_format: { type: 'json_object' }
+          }),
+        });
+
+        if (response.ok) {
+          const data = (await response.json()) as any;
+          rawInsightOutput = data?.choices?.[0]?.message?.content;
+        } else {
+          const errorBody = await response.text();
+          logDevelopmentError('Groq pattern insight API error', {
+            status: response.status,
+            body: errorBody,
+          });
+        }
+      } catch (error) {
+        logDevelopmentError('Groq pattern insight request failed', error);
+      } finally {
+        clearTimeout(timeout);
+      }
+    } else {
+      logDevelopmentError('Missing GROQ_API_KEY for pattern insight');
+    }
+  }
+
+  if (!rawInsightOutput) {
+    return fallbackResponse();
+  }
+
+  const insight = toSafePatternInsight(rawInsightOutput);
+  return Response.json(insight);
 }
 
 async function parseRequestBody(request: Request): Promise<PatternInsightRequestBody | null> {
@@ -208,7 +256,7 @@ function toSafeConfidence(value: unknown): PatternConfidence {
 }
 
 function containsExactAmount(value: string): boolean {
-  return /₹|\brs\.?\b|\brupees?\b|\d/.test(value.toLowerCase());
+  return /[$₹]|\brs\.?\b|\brupees?\b|\busd\b|\bdollars?\b|\bcents?\b|\d/.test(value.toLowerCase());
 }
 
 function isBrokenText(value: string): boolean {
