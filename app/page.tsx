@@ -18,7 +18,6 @@ const expenseCategories: MockExpense['category'][] = [
   'personal care',
 ];
 
-type ActiveTab = 'overview' | 'patterns' | 'settings';
 type SessionExpense = MockExpense & { id: string };
 
 function createExpenseId(
@@ -62,7 +61,6 @@ function getTodayInputValue() {
 }
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<ActiveTab>('overview');
   const [monthlyBudget, setMonthlyBudget] = useState(initialMonthlyBudget);
   const [budgetInput, setBudgetInput] = useState(String(initialMonthlyBudget));
   const [isEditingBudget, setIsEditingBudget] = useState(false);
@@ -160,65 +158,30 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[#f8efe4] text-[#3a2118]">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-5 sm:px-6 lg:flex-row lg:gap-8 lg:px-8 lg:py-8">
-        <aside className="lg:sticky lg:top-8 lg:h-[calc(100vh-4rem)] lg:w-32">
-          <nav
-            className="flex items-center gap-2 overflow-x-auto rounded-[2rem] border border-[#ead9c8] bg-[#765447] p-2 shadow-[0_18px_45px_rgba(76,45,33,0.18)] lg:h-full lg:flex-col lg:justify-start lg:gap-4 lg:overflow-visible lg:py-8"
-            aria-label="Dashboard navigation"
-          >
-            <BunnyLogo />
-            <SidebarItem
-              label="Overview"
-              icon="⌂"
-              active={activeTab === 'overview'}
-              onClick={() => setActiveTab('overview')}
-            />
-            <SidebarItem
-              label="Patterns"
-              icon="⌘"
-              active={activeTab === 'patterns'}
-              onClick={() => setActiveTab('patterns')}
-            />
-            <SidebarItem
-              label="Settings"
-              icon="⚙"
-              active={activeTab === 'settings'}
-              onClick={() => setActiveTab('settings')}
-            />
-          </nav>
-        </aside>
-
-        <div className="min-w-0 flex-1">
-          {activeTab === 'overview' && (
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
-              <div className="flex min-w-0 flex-col gap-6 lg:col-span-2 lg:gap-8">
-                <header className="flex flex-col gap-3 rounded-[2rem] border border-[#ead9c8] bg-[#fffaf3]/85 p-5 shadow-[0_20px_60px_rgba(76,45,33,0.10)] sm:p-7">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-5 sm:px-6 lg:flex-col lg:gap-8 lg:px-8 lg:py-8">
+        <div className="min-w-0 flex-1 flex flex-col gap-8">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
+            <div className="flex min-w-0 flex-col gap-6 lg:col-span-2 lg:gap-8">
+              <header className="flex flex-col gap-3 rounded-[2rem] border border-[#ead9c8] bg-[#fffaf3]/85 p-5 shadow-[0_20px_60px_rgba(76,45,33,0.10)] sm:p-7">
+                <div className="flex items-center gap-4">
+                  <BunnyLogo />
                   <h1 className="text-4xl font-black tracking-wide text-[#8B4513] sm:text-5xl" style={{ fontFamily: '"Nunito", "Arial Rounded MT Bold", "Varela Round", system-ui, sans-serif', letterSpacing: '0.06em' }}>
                     BUNO
                   </h1>
-                  <p className="max-w-2xl text-sm leading-6 text-[#735747] sm:text-base">
+                </div>
+                <p className="max-w-2xl text-sm leading-6 text-[#735747] sm:text-base">
                     A calm student budget assistant that tracks your setup, reads your spending pace, and keeps guidance qualitative.
                   </p>
                 </header>
 
-                <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(260px,0.75fr)_minmax(0,1.25fr)]">
-                  <section className="flex min-h-[26rem] flex-col justify-between rounded-[1.75rem] border border-[#ead9c8] bg-[#fffaf3] p-5 shadow-[0_18px_48px_rgba(76,45,33,0.10)] sm:p-6">
-                    <div className="flex flex-col gap-1">
-                      <h2 className="text-2xl font-bold tracking-tight text-[#3a2118]">Activity Rhythm</h2>
-                      <p className="text-sm text-[#7d6253]">{monthlyPatternSummary.currentMonthActivitySummary}</p>
-                    </div>
-
-                    <div className="mt-6 grid gap-3">
-                      <SummaryTile label="This month" value={`${monthlyPatternSummary.totalExpensesThisMonth} logs`} />
-                      <SummaryTile label="Top category" value={toTitleCase(monthlyPatternSummary.mostFrequentCategory)} />
-                      <SummaryTile
-                        label="Rhythm"
-                        value={monthlyPatternSummary.hasClusteredSpending ? 'Clustered' : 'Steady'}
-                      />
-                    </div>
-                  </section>
-
+                <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(260px,0.75fr)]">
                   <div className="flex min-w-0 flex-col gap-6">
+                    <ProbabilityWindow
+                      riskLabel={budgetState.riskLabel}
+                      zoneLabel={budgetState.zoneLabel}
+                      paceLabel={budgetState.paceLabel}
+                    />
+
                     <section className="rounded-[1.75rem] border border-[#ead9c8] bg-[#fffaf3] p-5 shadow-[0_18px_48px_rgba(76,45,33,0.10)] sm:p-6">
                       <div className="mb-5 flex flex-col gap-1">
                         <h2 className="text-2xl font-bold tracking-tight text-[#3a2118]">Monthly Budget</h2>
@@ -276,27 +239,24 @@ export default function Home() {
                         <SummaryTile label="Expenses logged" value={String(totalExpensesLogged)} />
                       </div>
                     </section>
-
-                    <ProbabilityWindow
-                      riskLabel={budgetState.riskLabel}
-                      zoneLabel={budgetState.zoneLabel}
-                      paceLabel={budgetState.paceLabel}
-                    />
                   </div>
+
+                  <section className="flex min-h-[26rem] flex-col justify-between rounded-[1.75rem] border border-[#ead9c8] bg-[#fffaf3] p-5 shadow-[0_18px_48px_rgba(76,45,33,0.10)] sm:p-6">
+                    <div className="flex flex-col gap-1">
+                      <h2 className="text-2xl font-bold tracking-tight text-[#3a2118]">Activity Rhythm</h2>
+                      <p className="text-sm text-[#7d6253]">{monthlyPatternSummary.currentMonthActivitySummary}</p>
+                    </div>
+
+                    <div className="mt-6 grid gap-3">
+                      <SummaryTile label="This month" value={`${monthlyPatternSummary.totalExpensesThisMonth} logs`} />
+                      <SummaryTile label="Top category" value={toTitleCase(monthlyPatternSummary.mostFrequentCategory)} />
+                      <SummaryTile
+                        label="Rhythm"
+                        value={monthlyPatternSummary.hasClusteredSpending ? 'Clustered' : 'Steady'}
+                      />
+                    </div>
+                  </section>
                 </div>
-
-                <section className="rounded-[1.75rem] border border-[#ead9c8] bg-[#fffaf3] p-5 shadow-[0_18px_48px_rgba(76,45,33,0.10)] sm:p-6">
-                  <div className="flex flex-col gap-1">
-                    <h2 className="text-2xl font-bold tracking-tight text-[#3a2118]">Monthly Spending Patterns</h2>
-                    <p className="text-sm text-[#7d6253]">Deterministic analysis based on your activity this month.</p>
-                  </div>
-
-                  <div className="mt-5 grid gap-4 md:grid-cols-3">
-                    <PatternSummaryItem label="Most frequent" value={toTitleCase(monthlyPatternSummary.mostFrequentCategory)} />
-                    <PatternSummaryItem label="Weekly split" value={`${monthlyPatternSummary.weekdayExpenseCount} weekday / ${monthlyPatternSummary.weekendExpenseCount} weekend`} />
-                    <PatternSummaryItem label="Small spends" value={monthlyPatternSummary.hasRepeatedSmallPurchases ? 'Repeating often' : 'Well spaced'} />
-                  </div>
-                </section>
 
                 <section className="rounded-[1.75rem] border border-[#ead9c8] bg-[#fffaf3] p-5 shadow-[0_18px_48px_rgba(76,45,33,0.10)] sm:p-6">
                   <div className="flex flex-col gap-1">
@@ -365,103 +325,7 @@ export default function Home() {
                 </section>
               </aside>
             </div>
-          )}
 
-          {activeTab === 'patterns' && (
-            <div className="flex flex-col gap-6">
-              <PatternInsight
-                riskLabel={budgetState.riskLabel}
-                recentExpenses={expenses}
-                daysRemaining={daysRemaining}
-              />
-
-              {monthlyPatternSummary.totalExpensesThisMonth === 0 ? (
-                <div className="rounded-[1.75rem] border border-[#ead9c8] bg-[#fffaf3] p-8 text-center shadow-[0_18px_48px_rgba(76,45,33,0.10)]">
-                  <p className="text-lg font-bold text-[#3a2118]">No pattern history yet</p>
-                  <p className="mt-2 text-sm text-[#7d6253]">
-                    Log some expenses in the Overview tab to view your monthly patterns.
-                  </p>
-                </div>
-              ) : (
-                <section className="rounded-[1.75rem] border border-[#ead9c8] bg-[#fffaf3] p-5 shadow-[0_18px_48px_rgba(76,45,33,0.10)] sm:p-6 flex flex-col gap-6">
-                  <div>
-                    <h2 className="text-2xl font-bold tracking-tight text-[#3a2118]">Monthly spending patterns</h2>
-                    <p className="text-sm text-[#7d6253]">Deterministic analysis based on your activity this month.</p>
-                  </div>
-
-                  <div className="rounded-2xl bg-white/60 p-4 border border-[#efe2d4]">
-                    <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-[#9b7968]">Activity Rhythm</h3>
-                    <p className="mt-2 text-base font-semibold text-[#3a2118]">
-                      {monthlyPatternSummary.currentMonthActivitySummary}
-                    </p>
-                    <p className="mt-1 text-sm text-[#7d6253]">
-                      You have logged <span className="font-semibold text-[#3a2118]">{monthlyPatternSummary.totalExpensesThisMonth} expenses</span> this month.
-                    </p>
-                  </div>
-
-                  <div className="grid gap-6 md:grid-cols-2">
-                    <div className="rounded-2xl bg-white/60 p-4 border border-[#efe2d4] flex flex-col gap-3">
-                      <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-[#9b7968]">Top Categories</h3>
-                      <p className="text-sm text-[#7d6253]">
-                        Most frequent: <span className="font-semibold text-[#3a2118] capitalize">{monthlyPatternSummary.mostFrequentCategory}</span>
-                      </p>
-                      <div className="flex flex-col gap-2 mt-2">
-                        {monthlyPatternSummary.categoryFrequencyBreakdown.map((item) => (
-                          <div key={item.category} className="flex items-center justify-between text-sm">
-                            <span className="capitalize text-[#3a2118]">{item.category}</span>
-                            <span className="rounded-full bg-[#f3e6d8] px-2.5 py-0.5 text-xs font-semibold text-[#6e4d3f]">
-                              {item.count} {item.count === 1 ? 'time' : 'times'}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl bg-white/60 p-4 border border-[#efe2d4] flex flex-col gap-4">
-                      <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-[#9b7968]">Timing & Trends</h3>
-                      
-                      <div>
-                        <h4 className="text-[10px] font-bold text-[#7d6253] uppercase tracking-wider">Weekly distribution</h4>
-                        <p className="mt-1 text-sm text-[#3a2118]">
-                          {monthlyPatternSummary.weekdayExpenseCount > 0 || monthlyPatternSummary.weekendExpenseCount > 0 ? (
-                            <>
-                              You have logged <span className="font-semibold">{monthlyPatternSummary.weekdayExpenseCount} weekday</span> spends and <span className="font-semibold">{monthlyPatternSummary.weekendExpenseCount} weekend</span> spends.
-                            </>
-                          ) : (
-                            "No weekly distribution data available."
-                          )}
-                        </p>
-                      </div>
-
-                      <div>
-                        <h4 className="text-[10px] font-bold text-[#7d6253] uppercase tracking-wider">Small Spends Pace</h4>
-                        <p className="mt-1 text-sm text-[#3a2118]">
-                          {monthlyPatternSummary.hasRepeatedSmallPurchases ? (
-                            "A high frequency of smaller purchases has been detected. These can accumulate quietly over time."
-                          ) : (
-                            "Your small spends are well spaced, keeping your budget pace steady."
-                          )}
-                        </p>
-                      </div>
-
-                      <div>
-                        <h4 className="text-[10px] font-bold text-[#7d6253] uppercase tracking-wider">Spending rhythm</h4>
-                        <p className="mt-1 text-sm text-[#3a2118]">
-                          {monthlyPatternSummary.hasClusteredSpending ? (
-                            "Bursty clusters of spending detected. Spends are concentrated in certain short periods."
-                          ) : (
-                            "Your spending is relatively evenly distributed across the month so far."
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </section>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'settings' && (
             <section className="rounded-[1.75rem] border border-[#ead9c8] bg-[#fffaf3] p-5 shadow-[0_18px_48px_rgba(76,45,33,0.10)] sm:p-6 flex flex-col gap-6">
               <div>
                 <h2 className="text-2xl font-bold tracking-tight text-[#3a2118]">Settings</h2>
@@ -530,42 +394,12 @@ export default function Home() {
                 </div>
               </div>
             </section>
-          )}
         </div>
       </div>
     </main>
   );
 }
 
-function SidebarItem({
-  label,
-  icon,
-  active = false,
-  onClick,
-}: {
-  label: string;
-  icon: string;
-  active?: boolean;
-  onClick?: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`flex min-w-24 flex-1 items-center justify-center gap-2 rounded-3xl px-4 py-3 text-sm font-medium transition lg:min-w-0 lg:flex-none lg:flex-col lg:px-3 lg:py-5 ${
-        active
-          ? 'bg-[#fffaf3] text-[#3a2118] shadow-[0_12px_30px_rgba(48,28,20,0.18)]'
-          : 'text-[#fff3e7] hover:bg-white/10'
-      }`}
-      aria-current={active ? 'page' : undefined}
-    >
-      <span className="text-xl leading-none" aria-hidden="true">
-        {icon}
-      </span>
-      <span>{label}</span>
-    </button>
-  );
-}
 
 function BunnyLogo() {
   return (
@@ -692,4 +526,49 @@ function getCategoryInitial(category: string): string {
   const trimmedCategory = category.trim();
 
   return trimmedCategory ? trimmedCategory.charAt(0) : '•';
+}
+
+function getSpendingHealthScore(summary: MonthlyPatternSummary) {
+  let score = 100;
+  if (summary.hasRepeatedSmallPurchases) score -= 20;
+  if (summary.hasClusteredSpending) score -= 15;
+  if (summary.totalExpensesThisMonth > 15) {
+    score -= Math.min(15, (summary.totalExpensesThisMonth - 15) * 2);
+  }
+  score = Math.max(10, score);
+  
+  let label = 'Excellent';
+  if (score < 60) label = 'Needs Attention';
+  else if (score < 80) label = 'Good';
+  
+  return { score, label };
+}
+
+function getConsistencyPct(summary: MonthlyPatternSummary): number {
+  const total = summary.totalExpensesThisMonth;
+  if (total === 0) return 100;
+  const weekdayRatio = summary.weekdayExpenseCount / total;
+  const dev = Math.abs(weekdayRatio - 0.71);
+  const score = Math.round((1 - dev) * 100);
+  return Math.max(30, Math.min(100, score));
+}
+
+function getActiveDays(expenses: { date: string | Date }[]): Set<number> {
+  const activeDays = new Set<number>();
+  expenses.forEach((expense) => {
+    const d = new Date(expense.date);
+    if (!Number.isNaN(d.getTime())) {
+      activeDays.add(d.getDate());
+    }
+  });
+  return activeDays;
+}
+
+function MetricCard({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div className={`rounded-2xl border border-[#ead9c8] bg-[#fffaf3] p-4 shadow-[0_12px_30px_rgba(76,45,33,0.06)] flex flex-col justify-between ${accent ? 'ring-1 ring-[#8B4513]/20' : ''}`}>
+      <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#a48673]">{label}</span>
+      <span className="mt-2 text-2xl font-black text-[#3a2118]">{value}</span>
+    </div>
+  );
 }
